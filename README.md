@@ -11,6 +11,8 @@
 
 **零第三方依赖**（纯 Python 标准库）· **数据全在你本地**（纯文本 JSON）· **MIT 许可**
 
+![它怎么运转](docs/images/how-it-works.png)
+
 ---
 
 ## 它解决什么问题
@@ -44,6 +46,10 @@ python3 scripts/validate.py --all
 ```
 
 之后每次涉及任务，先跑 `python3 scripts/task_show.py`。
+
+下面是它真实的输出样子（一张任务卡：目标、完成标准、以及每一步的执行者/产出/风险/沟通点）：
+
+![任务卡输出示例](docs/images/task-card.png)
 
 ---
 
