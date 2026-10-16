@@ -1,0 +1,596 @@
+{
+  "schema_version": "1.0",
+  "kind": "method_selection_rules",
+  "purpose": "供 Skill 层把任务特征映射到 AI 方法库条目（推荐/不推荐），避免模型每次临时编造或机械套框架。",
+  "generated_from": "methods/index.json",
+  "generated_from_sha256": "670d82b6d1341546edaf89220d2b4070eb35cb113e600f62961696bd319c6a22",
+  "generated_at": "2026-10-14T16:22:25Z",
+  "authority_note": "本文件只承载「任务特征 → 推荐/不推荐方法」的规则与依据，不复制方法正文。方法条目的权威数据是 methods/index.json（机器可读）与 methods/<method_id>.md（正文）；若本文件与其冲突，以 methods/index.json 为准。",
+  "method_ref_convention": "recommend / avoid 中的字符串是 methods/index.json 里的裸 method_id（无前缀）。校验时必须对全部字符串做成员检查；不要依赖前缀过滤（当前 8 个 method_id 均不以 M- 开头）。",
+  "how_to_use": [
+    "步骤 1：从任务记录提取特征键（见 task_feature_keys）；缺失的特征按「未知」处理，不得默认成安全值。",
+    "步骤 2：按 priority 从小到大评估 rules；when 中的所有键都命中才触发（数组值表示「属于其中之一」）。",
+    "步骤 3：先应用 avoid（否定规则优先）：被 avoid 的方法不得选用，除非用户明确要求，且必须在状态记录 decisions 中写明理由与残余风险。",
+    "步骤 4：再应用 recommend，并受 max_methods_by_depth 限制；超出的按 priority 保留前 N 条。",
+    "步骤 5：把「选了哪条规则、用了哪个方法、依据是什么」写入 state/tasks.json 的 decisions，便于事后追溯与验收。",
+    "步骤 6：任何方法条目的 verification_status 若不是 validated，都不得在汇报中暗示该方法已被本项目验证有效。"
+  ],
+  "task_feature_keys": {
+    "domain": {
+      "type": "enum",
+      "values": [
+        "work",
+        "life",
+        "study",
+        "personal_project",
+        "other"
+      ],
+      "source": "state/schema.json → enums.domain"
+    },
+    "task_type": {
+      "type": "enum",
+      "values": [
+        "research",
+        "decision",
+        "execution",
+        "writing",
+        "coordination",
+        "learning",
+        "admin",
+        "other"
+      ],
+      "source": "state/schema.json → enums.task_type"
+    },
+    "planning_depth": {
+      "type": "enum",
+      "values": [
+        "light",
+        "standard",
+        "deep"
+      ],
+      "source": "state/schema.json → enums.planning_depth",
+      "meaning": "复杂度分档（spec/01 §4B）"
+    },
+    "risk_level": {
+      "type": "ordinal",
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "meaning": "风险高低：影响 × 可能性（可由风险矩阵或任务分档给出）"
+    },
+    "needs_multi_party_decision": {
+      "type": "boolean",
+      "meaning": "是否存在必须由他人批准/决定的事项（spec/01 §4G）"
+    },
+    "needs_acceptance": {
+      "type": "boolean",
+      "meaning": "交付物是否需要他人验收，或是否存在明确验收条件"
+    },
+    "has_irreversible_action": {
+      "type": "boolean",
+      "meaning": "是否包含不可逆或对外产生后果的动作（发送/提交/购买/发布/删除）"
+    },
+    "deadline_pressure": {
+      "type": "ordinal",
+      "values": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "meaning": "时间压力；high = 数分钟内要有答复"
+    },
+    "deliverable_defined": {
+      "type": "boolean",
+      "meaning": "交付物是否已能清楚描述"
+    },
+    "problem_framing_unclear": {
+      "type": "boolean",
+      "meaning": "是否还写不出可回答的主问题"
+    },
+    "stages_with_dependencies": {
+      "type": "boolean",
+      "meaning": "是否跨天/跨周且阶段之间存在真实依赖"
+    },
+    "can_iterate_with_observable_feedback": {
+      "type": "boolean",
+      "meaning": "是否允许小步试验且结果可观察"
+    },
+    "plan_draft_ready": {
+      "type": "boolean",
+      "meaning": "计划草案是否已到可评审状态"
+    },
+    "outcome_externally_determined": {
+      "type": "boolean",
+      "meaning": "最终结果是否主要由外部因素决定"
+    }
+  },
+  "max_methods_by_depth": {
+    "light": 0,
+    "standard": 1,
+    "deep": 3,
+    "note": "spec/01 §4B 成本相称原则；上限是「同时使用的方法条数」，不是「提及的方法条数」。"
+  },
+  "rules": [
+    {
+      "rule_id": "SEL-02",
+      "priority": 5,
+      "title": "时间压力高（数分钟内要答复）：任何重型方法都停机",
+      "when": {
+        "deadline_pressure": [
+          "high"
+        ]
+      },
+      "recommend": [],
+      "avoid": [
+        "structured-problem-solving-issue-tree",
+        "wbs",
+        "phase-gate-milestone",
+        "raci-daci",
+        "pdca",
+        "risk-matrix",
+        "premortem",
+        "definition-of-done-checklist"
+      ],
+      "action": "给一句话结论 + 最多 3 个待确认问题；明确写出「未做结构化分析」这一事实",
+      "basis": "reports/METHOD_RESEARCH.md §3.3 N7（时间预算极短时结构化方法的时间成本超过收益）；spec/01 §4B 成本相称原则",
+      "basis_refs": [
+        "reports/METHOD_RESEARCH.md §3.3 N7",
+        "spec/01_PRODUCT_SPEC.md §4B"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-01",
+      "priority": 10,
+      "title": "轻量任务：不加载方法库",
+      "when": {
+        "planning_depth": [
+          "light"
+        ]
+      },
+      "recommend": [],
+      "avoid": [
+        "structured-problem-solving-issue-tree",
+        "wbs",
+        "phase-gate-milestone",
+        "raci-daci",
+        "pdca",
+        "risk-matrix",
+        "premortem",
+        "definition-of-done-checklist"
+      ],
+      "action": "输出行动清单 + 一条可判断真假的完成标准；不读取 methods/ 正文，也不产出表格/矩阵/角色表",
+      "basis": "spec/01 §4B『不允许所有任务都使用同一套冗长 SOP。规划本身也有成本，应与任务价值相称』；spec/04 T01 通过标准要求轻量任务不生成冗长背景研究或复杂项目流程",
+      "basis_refs": [
+        "spec/01_PRODUCT_SPEC.md §4B",
+        "spec/04_ACCEPTANCE_TESTS.md T01",
+        "reports/METHOD_RESEARCH.md §3.3 N1",
+        "reports/METHOD_RESEARCH.md §3.3 N2"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-03",
+      "priority": 20,
+      "title": "问题本身说不清（无法写出可回答的主问题）→ 问题树",
+      "when": {
+        "problem_framing_unclear": [
+          true
+        ],
+        "task_type": [
+          "research",
+          "decision",
+          "other"
+        ]
+      },
+      "recommend": [
+        "structured-problem-solving-issue-tree"
+      ],
+      "avoid": [
+        "wbs",
+        "phase-gate-milestone"
+      ],
+      "action": "先画问题树明确「要回答什么」，再决定是否需要分解或设门",
+      "basis": "methods/index.json → structured-problem-solving-issue-tree.applicable_task_types 含 research/decision；wbs.not_applicable_when[1]『交付物尚未定型、还在确认用户到底要什么——先做问题树/研究，之后再来分解』",
+      "basis_refs": [
+        "methods/index.json → structured-problem-solving-issue-tree.applicable_task_types",
+        "methods/index.json → wbs.not_applicable_when[1]",
+        "spec/01_PRODUCT_SPEC.md §4C"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-04",
+      "priority": 30,
+      "title": "交付物已明确 + 多步执行 → WBS",
+      "when": {
+        "deliverable_defined": [
+          true
+        ],
+        "task_type": [
+          "execution",
+          "writing",
+          "coordination"
+        ],
+        "planning_depth": [
+          "standard",
+          "deep"
+        ]
+      },
+      "recommend": [
+        "wbs"
+      ],
+      "avoid": [],
+      "action": "自上而下拆到「可估算、可分配、可验收」的工作包；每个工作包一个负责人 + 一条完成标准",
+      "basis": "methods/index.json → wbs.applicable_task_types 含 execution/writing/coordination；wbs.preconditions[0]『最终交付物或结果能被描述出来』",
+      "basis_refs": [
+        "methods/index.json → wbs.applicable_task_types",
+        "methods/index.json → wbs.preconditions[0]",
+        "spec/01_PRODUCT_SPEC.md §4C"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-05",
+      "priority": 31,
+      "title": "交付物未定型 → 不要 WBS",
+      "when": {
+        "deliverable_defined": [
+          false
+        ]
+      },
+      "recommend": [
+        "structured-problem-solving-issue-tree"
+      ],
+      "avoid": [
+        "wbs"
+      ],
+      "action": "先做问题树/需求澄清或小范围研究；等交付物能描述后再分解",
+      "basis": "methods/index.json → wbs.not_applicable_when[1]（原文见上）",
+      "basis_refs": [
+        "methods/index.json → wbs.not_applicable_when[1]"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-06",
+      "priority": 40,
+      "title": "跨天/跨周且阶段间有真实依赖 → 阶段门/里程碑",
+      "when": {
+        "stages_with_dependencies": [
+          true
+        ],
+        "planning_depth": [
+          "standard",
+          "deep"
+        ]
+      },
+      "recommend": [
+        "phase-gate-milestone"
+      ],
+      "avoid": [],
+      "action": "按产出性质划分 2–5 个阶段，每门写 2–5 条可判断真假的退出准则，并指定判断人",
+      "basis": "methods/index.json → phase-gate-milestone.preconditions[0][1]（跨多天/多周、阶段间存在真实依赖）",
+      "basis_refs": [
+        "methods/index.json → phase-gate-milestone.preconditions[0]",
+        "methods/index.json → phase-gate-milestone.preconditions[1]",
+        "spec/01_PRODUCT_SPEC.md §4C"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-07",
+      "priority": 41,
+      "title": "单步或短时任务 → 不要阶段门",
+      "when": {
+        "stages_with_dependencies": [
+          false
+        ],
+        "planning_depth": [
+          "light",
+          "standard"
+        ]
+      },
+      "recommend": [],
+      "avoid": [
+        "phase-gate-milestone"
+      ],
+      "action": "用轻量检查点（做完一项看一眼）替代否决门",
+      "basis": "methods/index.json → phase-gate-milestone.not_applicable_when[0]『单步、短时即可完成的任务——设门变成纯仪式』",
+      "basis_refs": [
+        "methods/index.json → phase-gate-milestone.not_applicable_when[0]"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-08",
+      "priority": 50,
+      "title": "存在必须由他人批准/决策的事项 → RACI 或 DACI",
+      "when": {
+        "needs_multi_party_decision": [
+          true
+        ]
+      },
+      "recommend": [
+        "raci-daci"
+      ],
+      "avoid": [],
+      "action": "列出 5–15 项关键活动/决策，每行恰好一个 A（最终负责/批准者），把批准时点写进计划",
+      "basis": "methods/index.json → raci-daci.applicable_task_types 含 coordination/decision；raci-daci.preconditions[0]『任务涉及两个及以上参与方』",
+      "basis_refs": [
+        "methods/index.json → raci-daci.applicable_task_types",
+        "methods/index.json → raci-daci.preconditions[0]",
+        "spec/01_PRODUCT_SPEC.md §4C"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-09",
+      "priority": 51,
+      "title": "单人执行且单人决策 → 不要 RACI/DACI",
+      "when": {
+        "needs_multi_party_decision": [
+          false
+        ]
+      },
+      "recommend": [],
+      "avoid": [
+        "raci-daci"
+      ],
+      "action": "只写「谁在何时交什么」；需要授权的对外动作单独标注（spec/01 §4G）",
+      "basis": "methods/index.json → raci-daci.not_applicable_when[0]『只有用户一个人执行与决策——写出责任人是自己的表没有任何价值』",
+      "basis_refs": [
+        "methods/index.json → raci-daci.not_applicable_when[0]",
+        "spec/01_PRODUCT_SPEC.md §4G"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-10",
+      "priority": 60,
+      "title": "允许迭代 + 结果可观察 + 无不可逆动作 → PDCA",
+      "when": {
+        "can_iterate_with_observable_feedback": [
+          true
+        ],
+        "has_irreversible_action": [
+          false
+        ],
+        "planning_depth": [
+          "standard",
+          "deep"
+        ]
+      },
+      "recommend": [
+        "pdca"
+      ],
+      "avoid": [],
+      "action": "先写指标与时间盒，再执行；结论文档区分「数据支持 / 主观感觉 / 尚未确认」，写回经验库时必须带 observed_outcome 证据",
+      "basis": "methods/index.json → pdca.preconditions[0][1][2]；spec/01 §4C『PDCA：需要反复试验、改进的任务』",
+      "basis_refs": [
+        "methods/index.json → pdca.preconditions",
+        "methods/index.json → pdca.checkpoints[4]",
+        "spec/01_PRODUCT_SPEC.md §4C"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-11",
+      "priority": 61,
+      "title": "含不可逆或对外产生后果的动作 → 不要用 PDCA 试错",
+      "when": {
+        "has_irreversible_action": [
+          true
+        ]
+      },
+      "recommend": [
+        "definition-of-done-checklist",
+        "phase-gate-milestone"
+      ],
+      "avoid": [
+        "pdca"
+      ],
+      "action": "先出检查表与授权确认，再执行一次性动作；如必须试，先把范围缩小到可回滚的部分",
+      "basis": "methods/index.json → pdca.not_applicable_when[0]『不可逆或高风险的一次性动作……不能靠试错，应用检查表/阶段门』；spec/04 T11（外部副作用需要授权）",
+      "basis_refs": [
+        "methods/index.json → pdca.not_applicable_when[0]",
+        "spec/04_ACCEPTANCE_TESTS.md T11"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-12",
+      "priority": 70,
+      "title": "风险中/高且计划草案已可评审 → 风险矩阵 + pre-mortem",
+      "when": {
+        "risk_level": [
+          "medium",
+          "high"
+        ],
+        "plan_draft_ready": [
+          true
+        ]
+      },
+      "recommend": [
+        "risk-matrix",
+        "premortem"
+      ],
+      "avoid": [],
+      "action": "先做 pre-mortem 得到反向原因，再转成风险条目（可能性 × 影响、责任人、升级信号、复查时间）",
+      "basis": "spec/01 §4C『风险矩阵、预演失败（pre-mortem）：风险较高或不确定性较大时』；methods/index.json → risk-matrix.preconditions[0][1]、premortem.preconditions[0]",
+      "basis_refs": [
+        "spec/01_PRODUCT_SPEC.md §4C",
+        "methods/index.json → risk-matrix.preconditions",
+        "methods/index.json → premortem.preconditions[0]"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-13",
+      "priority": 71,
+      "title": "计划尚未成型 → 不要 pre-mortem",
+      "when": {
+        "plan_draft_ready": [
+          false
+        ]
+      },
+      "recommend": [
+        "structured-problem-solving-issue-tree"
+      ],
+      "avoid": [
+        "premortem"
+      ],
+      "action": "先澄清问题或收集需求；计划成型后再做预演失败",
+      "basis": "methods/index.json → premortem.not_applicable_when[2]『计划尚未成型（还在收集需求）——此时做会变成空泛担忧』",
+      "basis_refs": [
+        "methods/index.json → premortem.not_applicable_when[2]"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-14",
+      "priority": 80,
+      "title": "交付物需要验收 → Definition of Done 检查表",
+      "when": {
+        "needs_acceptance": [
+          true
+        ]
+      },
+      "recommend": [
+        "definition-of-done-checklist"
+      ],
+      "avoid": [],
+      "action": "事先把完成定义写成可判断真假的标准（含证据形式），结束时区分「交付物达标 / 待他人确认 / 未实现」",
+      "basis": "methods/index.json → definition-of-done-checklist.applicable_task_types 与 preconditions[0][1]；spec/01 §4C『明确完成定义（Definition of Done）与检查表：交付物需要验收时』",
+      "basis_refs": [
+        "methods/index.json → definition-of-done-checklist.preconditions",
+        "spec/01_PRODUCT_SPEC.md §4C",
+        "spec/04_ACCEPTANCE_TESTS.md T13"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-15",
+      "priority": 81,
+      "title": "结果完全由外部决定 → 不要写成果标准",
+      "when": {
+        "outcome_externally_determined": [
+          true
+        ]
+      },
+      "recommend": [],
+      "avoid": [
+        "definition-of-done-checklist"
+      ],
+      "action": "只写清「我方完成范围」，把最终目标标为待确认（对应 T13），不得把外部结果写成我方完成标准",
+      "basis": "methods/index.json → definition-of-done-checklist.not_applicable_when[0]『结果完全由外部决定、无法预先定义标准……只能写清我方完成范围』；spec/04 T13",
+      "basis_refs": [
+        "methods/index.json → definition-of-done-checklist.not_applicable_when[0]",
+        "spec/04_ACCEPTANCE_TESTS.md T13"
+      ],
+      "confidence": "推断（依据 spec 与 methods/index.json 的字段，非来源原文）"
+    },
+    {
+      "rule_id": "SEL-16",
+      "priority": 90,
+      "title": "生活/家庭类且轻量分档 → 少用重型方法（领域本身不足以决定）",
+      "when": {
+        "domain": [
+          "life"
+        ],
+        "planning_depth": [
+          "light"
+        ]
+      },
+      "recommend": [],
+      "avoid": [
+        "structured-problem-solving-issue-tree",
+        "wbs",
+        "phase-gate-milestone",
+        "raci-daci",
+        "pdca",
+        "risk-matrix",
+        "premortem",
+        "definition-of-done-checklist"
+      ],
+      "action": "行动清单 + 一句完成标准；若涉及家人分工，只取「谁做什么」极简版而不用完整 RACI 表",
+      "basis": "reports/METHOD_RESEARCH.md §3.3 N1/N2（成本相称）；spec/01 §2 把家庭/生活类列为典型轻量场景。注意：本条只把 domain 与 planning_depth=light 联合使用，单独用 domain 判断属于刻板印象，本条不主张那样做",
+      "basis_refs": [
+        "reports/METHOD_RESEARCH.md §3.3 N1",
+        "reports/METHOD_RESEARCH.md §3.3 N2",
+        "spec/01_PRODUCT_SPEC.md §2"
+      ],
+      "confidence": "推断（弱）——领域与复杂度耦合，本条仅作轻量分档的补充信号，不作为独立判据"
+    }
+  ],
+  "combination_rules": [
+    {
+      "combo_id": "COMBO-01",
+      "title": "深入任务的常规顺序",
+      "sequence": [
+        "structured-problem-solving-issue-tree",
+        "wbs",
+        "phase-gate-milestone",
+        "definition-of-done-checklist"
+      ],
+      "note": "问题清楚后再拆交付物，再设阶段门，最后用完成定义收口；同时使用不超过 deep 的上限 3 条。",
+      "basis": "spec/01 §4C 按任务目标匹配方法；reports/METHOD_RESEARCH.md §3.2",
+      "basis_refs": [
+        "spec/01_PRODUCT_SPEC.md §4C",
+        "reports/METHOD_RESEARCH.md §3.2"
+      ]
+    },
+    {
+      "combo_id": "COMBO-02",
+      "title": "风险场景组合：pre-mortem → 风险矩阵",
+      "sequence": [
+        "premortem",
+        "risk-matrix"
+      ],
+      "note": "先用预演失败得到反向原因，再转成带等级/责任人/升级信号/复查时间的风险条目。",
+      "basis": "methods/index.json → premortem.outputs[1] 与 risk-matrix.steps[3][5]；reports/METHOD_RESEARCH.md §3.2",
+      "basis_refs": [
+        "methods/index.json → premortem.outputs",
+        "methods/index.json → risk-matrix.steps",
+        "reports/METHOD_RESEARCH.md §3.2"
+      ]
+    },
+    {
+      "combo_id": "COMBO-03",
+      "title": "禁止：问题树与 WBS 混成一张图",
+      "sequence": [],
+      "note": "两者节点语义不同（问题结构 vs 交付物结构），混在一起后「互斥且穷尽」「100% 规则」都无法判断。",
+      "basis": "methods/index.json → wbs.checkpoints[1]（100% 规则）；reports/METHOD_RESEARCH.md §3.2",
+      "basis_refs": [
+        "methods/index.json → wbs.checkpoints[1]",
+        "reports/METHOD_RESEARCH.md §3.2"
+      ]
+    },
+    {
+      "combo_id": "COMBO-04",
+      "title": "禁止：轻量任务叠加重型方法",
+      "sequence": [],
+      "note": "planning_depth=light 时方法条数为 0；出现 RACI + 阶段门 + 风险矩阵一类的组合即判定为过度规划。",
+      "basis": "spec/04 T01 通过标准；reports/METHOD_RESEARCH.md §3.3 N1/N8",
+      "basis_refs": [
+        "spec/04_ACCEPTANCE_TESTS.md T01",
+        "reports/METHOD_RESEARCH.md §3.3 N1",
+        "reports/METHOD_RESEARCH.md §3.3 N8"
+      ]
+    }
+  ],
+  "global_constraints": [
+    "avoid 优先于 recommend：用户明确要求的方法即使命中 avoid，也必须写下理由与残余风险后才可使用。",
+    "每次选择必须写入 state/tasks.json 的 decisions（含 rule_id 与 basis），否则视为未执行选择流程。",
+    "本文件不得包含任何用户任务内容或个人信息；它只是规则，不是数据。",
+    "方法条目变更后必须同步更新 basis_refs 与 generated_from_sha256，并重跑 §9.3 的校验命令。",
+    "本文件不构成对方法有效性的证明：8 条方法当前均为 verification_status=unverified（见 methods/index.json 的 limitations）。"
+  ],
+  "unverified_scope": [
+    "本文件中的规则全部是依据 spec/01、spec/04 与 methods/index.json 字段的推断（confidence 字段逐条标注），不是来自公开来源原文。",
+    "规则尚未在任何真实任务中执行验证；因此本文件不声明「用这些规则选择方法能提升任务成功率」。",
+    "method_id 引用在生成时（generated_from_sha256 对应版本）成立；若 methods/index.json 变更，引用需重新校验。"
+  ]
+}

@@ -1,0 +1,40 @@
+# 任务导航 —— 版本库排除规则
+#
+# 设计原则：**只排除生成物与本地状态，不排除交付物与数据契约。**
+# 曾经踩过的坑：不小心把 outputs/ 整个排除了，导致交付物一个都没进版本库。
+# 所以下面每一条都写明"排什么、为什么不排别的"。
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ── macOS ──
+.DS_Store
+._*
+
+# ── 编辑器/IDE ──
+.vscode/
+.idea/
+*.swp
+*~
+
+# ── 本地状态：备份与快照 ──
+# 排 backups/（全量快照，体量大且可重建），
+# **不排 state/ 本身**——schema.json 是数据契约，必须入库。
+state/backups/
+
+# ── 临时与隔离测试产物 ──
+tests/tmp/
+outputs/test-workspaces/
+tests/invalid/_seam*/
+
+# ── 生成物：数据导出 ──
+outputs/我的数据导出-*
+outputs/数据导出-*
+
+# ── 注意：下面这些**故意不排除** ──
+# state/schema.json       数据契约，删了脚本会报错
+# state/tasks.json        任务数据（如果你不想公开自己的任务，再单独排除）
+# outputs/deliverables/   交付物——曾经误排除过，不要再犯

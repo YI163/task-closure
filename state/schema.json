@@ -1,0 +1,377 @@
+{
+  "schema_version": "1.7",
+  "note": "Task Navigator 数据契约的唯一权威定义。scripts/validate.py 依据本文件校验 state/ 下所有数据。字段名遵循 spec/03_SKILLS_AND_EXPERIENCE_MEMORY.md。修改本文件必须同时提升 schema_version 并在 decisions.md 记录，且迁移前必须备份。",
+  "changelog": {
+    "1.1": "由 storage-builder 的契约偏差审查促成（见 decisions.md）：(a) plan[].required_skills 每项的字段名统一为 skill_ref（原文档误写 skill_id，实际代码与数据均为 skill_ref），语义为并集——skill_ref 可指向技能档案中的某个 skill_id 值，也可以是自由文本；交叉引用校验仅对确实匹配到档案条目时才强制。(b) 登记 task_update.py 实际写入但原 schema 未声明的字段：tasks[].acceptance、tasks[].verdict、experiences[].review_history、experiences[].counterexample_resolutions。(c) 明确 tasks[].plan_history（重规划时归档的旧计划）。 (d) methods.optional_fields 正式登记 limitations——field_rules 与 validate.py 的 M-UNVERIFIED 规则本就在读它，此前未登记属契约遗漏。",
+    "1.0": "初版：四域分离 + 跨引用 + 技能不得虚假升级与经验未执行不得记为已验证的门禁。",
+    "1.2": "由 t21/t22 的真实事故修复促成：(a) 新增 tasks.step_executor_fields——每步必须声明 executor（user/ai/joint）与 executor_basis，executor=ai 时必须写明 delegation_reason（四选一），落实 SKILL.md §0.4.1 与 reference/skill_adaptation.md §6.1；(b) 枚举登记进 schema.enums；(c) 明确写侧严/读侧宽容的有意不对称。",
+    "1.3": "由独立合规审计（t23）促成：(a) 明确 spec/01 §4E 的九项要求，standard/deep 下四项从「可留空」改为「须有内容或显式写不适用+理由」；(b) 新增 decision_authority 字段落实 spec/01 §4A 的决策权限提取。",
+    "1.4": "由独立重审（t24）促成：(a) 新增 experiences_used 落实 spec/03 §7-6 的经验使用留痕（此前只补了 methods_used，属「补错对象」）；(b) 明确 experiences_used 与 methods_used 的语义区别。",
+    "1.5": "由第三轮独立核审（t25）的 N6 促成：methods_used 与 experiences_used 此前完全无校验（伪造不存在的 ID 也能通过），且未在 schema 登记。现已登记并加引用校验。",
+    "1.6": "由用户追问促成：SKILL.md §J 要求按六类整理教训，但此前六类无落点、用户教的内容只进 decisions.md 流水账、进不了检索。新增 state/lessons/ 域 + lesson_type 枚举，并纳入 exp.py 检索。",
+    "1.7": "由全量规格核对促成：36 条技能引用中只有 4 条带档案状态/缺口说明，其余 32 条为自由文本且状态未知——技能适配路径在该情形下失效。新增要求：自由文本引用必须显式写明状态未知。"
+  },
+  "enums": {
+    "domain": [
+      "work",
+      "life",
+      "study",
+      "personal_project",
+      "other"
+    ],
+    "task_type": [
+      "research",
+      "decision",
+      "execution",
+      "writing",
+      "coordination",
+      "learning",
+      "admin",
+      "other"
+    ],
+    "task_status": [
+      "not_started",
+      "in_progress",
+      "waiting_external",
+      "blocked",
+      "awaiting_acceptance",
+      "completed",
+      "cancelled"
+    ],
+    "planning_depth": [
+      "light",
+      "standard",
+      "deep"
+    ],
+    "retrospective_status": [
+      "not_reviewed",
+      "pending_triage",
+      "reviewed"
+    ],
+    "skill_status": [
+      "not_assessed",
+      "can_independently",
+      "can_with_checklist",
+      "needs_step_by_step",
+      "not_yet",
+      "needs_review"
+    ],
+    "skill_evidence_kind": [
+      "independent_operation",
+      "guided_practice",
+      "failed_attempt",
+      "observed_test",
+      "self_report"
+    ],
+    "experience_status": [
+      "to_verify",
+      "single_observation",
+      "repeatedly_supported",
+      "challenged_by_counterexample",
+      "obsolete"
+    ],
+    "method_verification": [
+      "unverified",
+      "single_use",
+      "validated",
+      "deprecated"
+    ],
+    "privacy_scope": [
+      "personal",
+      "work",
+      "general"
+    ],
+    "step_status": [
+      "pending",
+      "in_progress",
+      "done",
+      "blocked",
+      "skipped"
+    ],
+    "step_executor": [
+      "user",
+      "ai",
+      "joint"
+    ],
+    "delegation_reason": [
+      "极紧期限",
+      "高代价",
+      "纯机械劳动",
+      "用户明确要求"
+    ],
+    "lesson_type": [
+      "有效做法",
+      "无效做法",
+      "失败原因",
+      "方法适用条件",
+      "技能差距",
+      "流程改进"
+    ]
+  },
+  "tasks": {
+    "file": "state/tasks.json",
+    "root": {
+      "tasks": "array<Task>",
+      "last_updated": "iso8601"
+    },
+    "required_fields": [
+      "task_id",
+      "title",
+      "original_request",
+      "domain",
+      "task_type",
+      "goal",
+      "success_criteria",
+      "planning_depth",
+      "status",
+      "plan",
+      "completed_steps",
+      "evidence",
+      "decisions",
+      "risks",
+      "blockers",
+      "changes",
+      "assumptions",
+      "unknowns",
+      "next_best_action",
+      "created_at",
+      "updated_at",
+      "history",
+      "retrospective_status"
+    ],
+    "optional_fields": [
+      "requester_or_beneficiary",
+      "deadline",
+      "constraints",
+      "closed_at",
+      "deliverables",
+      "review_after",
+      "acceptance",
+      "verdict",
+      "plan_history",
+      "decision_authority",
+      "experiences_used",
+      "methods_used"
+    ],
+    "field_rules": {
+      "task_id": "匹配 ^TN-\\d{8}-\\d{3}$ 且全局唯一",
+      "success_criteria": "非空数组；每项为可判断真假的表述",
+      "planning_depth": "light 时 plan 允许只有行动清单性质的步骤；standard/deep 时每个 step 的 completion_criteria 与 deliverable 必填",
+      "plan[].required_skills": "数组；每项含 skill_ref（必填）以及可选 note/gap/adaptation。skill_ref 为并集语义：既可以是技能档案里某个条目的 skill_id 值（此时交叉引用必须成立），也可以是描述性自由文本（如「需求澄清」，此时不做档案交叉引用）。",
+      "plan[].completion_criteria": "非空字符串（step 存在即要求，避免「做完了但没标准」）",
+      "next_best_action": "对象 {action, reason}，两者非空",
+      "completed_steps": "数组；每项 {step_id, completed_at, evidence}；evidence 非空——无证据不得标记完成",
+      "evidence": "数组；每项 {evidence_id, kind, description, source, recorded_at}",
+      "changes": "重规划必须追加一条 {changed_at, what, why, impact}，不得就地覆盖旧计划",
+      "status": "completed 时 closed_at 必填；acceptance 与 verdict 由 task_update.py close 写入，未验收的任务不含这两个字段",
+      "acceptance": "对象；三问验收记录 {closed_at, actions_completed, deliverables_ok, goal_achieved, pending_external, verdict, incomplete_steps_at_close}；每问含 verdict 与 basis，basis 为空即校验失败",
+      "verdict": "字符串；仅 close 写入，取值「目标已实现」「我方工作已完成，最终目标尚待确认」「目标未实现」三者之一",
+      "plan_history": "数组；每次替换计划前归档旧计划 {archived_at, reason, plan}，保证「为什么计划变了」可追溯，不静默覆盖",
+      "history": "每次写入追加 {at, action, summary}，只增不改",
+      "standard/deep 的步骤完整性": "spec/01 §4E 要求每个步骤含 9 项：名称与目的、具体行动、所需技能及适配方式、输入条件/前置依赖、产出物、完成标准、预计耗时、风险与备用路径、沟通节点。定位：standard/deep 档位下，除 name/purpose/actions/required_skills/deliverable/completion_criteria 六项必填外，inputs_or_dependencies / time_estimate / risks_and_fallbacks / communication 四项也必须**有内容**；确实不适用时必须显式写「不适用」并给出理由（例如 communication 写「不适用：无外部依赖方」），但不允许留空数组——留空的后果是无人填写（实测：32 步中 risks_and_fallbacks 有内容的仅 9 条）。light 档位保持从简，不适用本条。",
+      "decision_authority": "对象，来自 spec/01 §4A：{can_decide_alone: [..], must_ask: [{question, whom}, ..]}。记录「用户可自行决定什么」与「什么需要询问任务发起人」——它决定了后续哪些动作可以直接推进、哪些必须先沟通。多来源任务（如老板/家人发起）应填写；纯个人任务可省略。",
+      "experiences_used": "数组；每项 {experience_id, why_applicable}。experience_id 必须存在于 state/experience/，why_applicable 必须非空并说明适用条件——依据 spec/03 §7-6「在计划中简短说明采用了哪些经验、为什么适用」。",
+      "methods_used": "数组；每项 {method_id, why}。method_id 必须存在于 methods/index.json——「用了哪条方法」必须可追溯（spec/03 §7-6）。字段已在 schema 正式登记（此前为契约偏差）。",
+      "required_skills[]": "数组；每项 {skill_ref, gap?, adaptation?, note?}。skill_ref 可以是档案 ID（SK-YYYYMMDD-NNN）或自由文本（某项尚不在档案里的技能）。**standard/deep 档位下，自由文本引用必须给出 gap 或 archive_status，明确写出「该技能的用户状态未知」**——否则「技能缺口改变指导」这条要求在自由文本路径上没有落点。依据 spec/01 §4D 与 spec/03 §4：指导方式必须由用户在技能上的状态决定，不能默认。"
+    },
+    "step_required_fields": [
+      "step_id",
+      "name",
+      "purpose",
+      "actions",
+      "required_skills",
+      "deliverable",
+      "completion_criteria"
+    ],
+    "step_executor_fields": {
+      "rule": "缺执行者视为计划不完整——每一步必须写明「用户做 / AI 做 / 共同做」；AI 代做必须有理由",
+      "rule_sources": [
+        "skills/task-navigator/SKILL.md §0.4.1 计划自检表（执行者 / 谁执行的判断依据）",
+        "skills/task-navigator/reference/skill_adaptation.md §6.1「谁来做」先于「怎么教」"
+      ],
+      "incident": "2026-10-15 首次真实任务中，把本该由用户执行的步骤写成 AI 代做，用户当场纠正。教训：执行者归属必须在计划阶段确定，不能默认 AI 代做。（具体引用已移除——schema 会随分享包对外分发，不应包含用户原话。）",
+      "fields": {
+        "executor": {
+          "required": true,
+          "enum": [
+            "user",
+            "ai",
+            "joint"
+          ],
+          "meaning": "user=用户做，ai=AI 代做，joint=共同做"
+        },
+        "executor_basis": {
+          "required": true,
+          "meaning": "为什么由该方执行（默认规则：用户自己的生活/工作/学习事务默认用户做、AI 指导）"
+        },
+        "delegation_reason": {
+          "required_when": "executor == 'ai'",
+          "enum": [
+            "极紧期限",
+            "高代价",
+            "纯机械劳动",
+            "用户明确要求"
+          ],
+          "meaning": "AI 代做必须有理由，四选一并写明"
+        }
+      },
+      "asymmetry_note": "写侧（task_new / task_update）对「executor≠ai 却保留 delegation_reason」直接 die(2)：拒绝产生逻辑混乱的新数据。读侧（validate.py）只报 T-STEP-DELEGATION-STALE 警告：历史数据可能合法地留着旧理由，硬失败会让用户已有的记录突然变成「错误」。这是有意的不对称——入口收紧，历史宽容——不是口径不一致。",
+      "enum_registration_note": "枚举同时登记在 schema.enums.step_executor / delegation_reason，使只翻阅 enums 段的读者也能找到取值，不必深入 tasks 段。"
+    },
+    "step_optional_fields": [
+      "inputs_or_dependencies",
+      "time_estimate",
+      "estimate_basis",
+      "risks_and_fallbacks",
+      "communication",
+      "status"
+    ]
+  },
+  "user_skills": {
+    "file": "state/user_skills.json",
+    "root": {
+      "skills": "array<Skill>",
+      "last_updated": "iso8601"
+    },
+    "required_fields": [
+      "skill_id",
+      "skill_name",
+      "scope",
+      "status",
+      "evidence",
+      "confidence",
+      "last_verified_at",
+      "known_gaps",
+      "related_tasks",
+      "privacy_scope"
+    ],
+    "optional_fields": [
+      "preferred_learning_mode",
+      "notes"
+    ],
+    "field_rules": {
+      "skill_name": "必须具体到可验证；禁止「沟通能力好」这类不可验证表述（validate.py 用弱词黑名单拒绝）",
+      "evidence": "数组；每项 {kind, description, task_id, at}",
+      "status=can_independently": "必须至少有一条 kind=independent_operation 或 observed_test 的证据；否则校验失败——这是「不得虚假升级」的强制门禁",
+      "status=not_assessed": "evidence 可为空",
+      "confidence": "对象 {level: high|medium|low, basis: 非空字符串}",
+      "last_verified_at": "iso8601 或 null"
+    }
+  },
+  "experiences": {
+    "file": "state/experience/*.json",
+    "one_per_file": true,
+    "required_fields": [
+      "experience_id",
+      "title",
+      "conclusion",
+      "domain",
+      "task_type",
+      "tags",
+      "context",
+      "trigger_conditions",
+      "recommended_action",
+      "reasoning",
+      "observed_outcome",
+      "evidence",
+      "source_task_id",
+      "status",
+      "confidence",
+      "limitations",
+      "counterexamples",
+      "created_at",
+      "last_reviewed_at",
+      "privacy_scope"
+    ],
+    "optional_fields": [
+      "review_after",
+      "related_skill_ids",
+      "related_method_ids",
+      "review_history",
+      "counterexample_resolutions"
+    ],
+    "field_rules": {
+      "experience_id": "匹配 ^EXP-\\d{8}-\\d{3}$",
+      "status=repeatedly_supported": "必须 observed_outcome.executed=true 且 evidence 非空",
+      "status=single_observation": "必须 observed_outcome.executed=true 且 evidence 非空",
+      "status=to_verify": "允许 executed=false（计划从未执行）——这是 T09 的合法落点",
+      "禁止": "executed=false 时不得使用 repeatedly_supported/single_observation；不得把未执行的方法写成「显著提升效率」这类结果性结论",
+      "source_task_id": "必须指向 tasks.json 中存在的 task_id",
+      "trigger_conditions": "非空数组——没有适用条件的经验不允许入库；空数组一律判失败（见 validate.py 规则 E-TRIGGER）",
+      "review_history": "数组；每次复核追加 {reviewed_at, previous_status, new_status, note}，只增不改，用于回答「这条经验的状态为什么变了」",
+      "counterexample_resolutions": "数组；被反例挑战后若要升级状态，必须留下处理依据 {resolved_at, note}。未经处理的反例不得升级状态"
+    }
+  },
+  "methods": {
+    "file": "methods/index.json",
+    "root": {
+      "methods": "array<Method>",
+      "last_updated": "iso8601"
+    },
+    "required_fields": [
+      "method_id",
+      "name",
+      "applicable_task_types",
+      "problem_solved",
+      "expected_outcome",
+      "preconditions",
+      "not_applicable_when",
+      "inputs",
+      "outputs",
+      "steps",
+      "checkpoints",
+      "failure_handling",
+      "source",
+      "verification_status"
+    ],
+    "optional_fields": [
+      "related_method_ids",
+      "related_test_ids",
+      "tool_requirements",
+      "limitations"
+    ],
+    "field_rules": {
+      "source": "对象 {kind: public_framework|official_doc|own_experience|other, citation, retrieved_at}；公开框架必须给可核实来源，不得声称为某机构内部专有流程",
+      "verification_status": "unverified 时必须有一条 limitation 说明未验证范围",
+      "limitations": "数组；verification_status=unverified 时必须至少一条，说明未验证的范围。已验证条目若存在已知局限同样应保留——局限不因验证而消失"
+    }
+  },
+  "cross_references": {
+    "experience.source_task_id": "必须存在于 tasks.json",
+    "experience.related_skill_ids[]": "必须存在于 user_skills.json",
+    "experience.related_method_ids[]": "必须存在于 methods/index.json",
+    "tasks[].plan[].required_skills[].skill_ref": "仅当该值等于技能档案中某个条目的 skill_id 时，才强制交叉引用成立；自由文本不校验（并集语义）",
+    "tasks[].plan_history[].plan[].step_id": "归档的旧计划，不参与当前计划的一致性校验",
+    "user_skills[].related_tasks[]": "必须存在于 tasks.json",
+    "completed_steps[].step_id": "必须存在于同任务的 plan 中"
+  },
+  "backups": {
+    "dir": "state/backups/<UTC时间戳>/",
+    "manifest": "manifest.json 含 {created_at, reason, files: [{path, sha256, records}], schema_version}",
+    "rule": "任何批量写入或 schema 迁移前必须创建备份；恢复校验必须能逐文件比对 sha256 与 records 数量"
+  },
+  "lessons": {
+    "file": "lessons/*.json",
+    "purpose": "流程类教训（跨任务的工作方式教训）。与 state/experience/ 分开存放：经验库按 domain 分领域检索，把流程教训混进去会污染领域检索；但两者**合并参与 exp.py search 的检索**。",
+    "required_fields": [
+      "experience_id",
+      "lesson_type",
+      "title",
+      "conclusion",
+      "trigger_conditions",
+      "limitations",
+      "evidence",
+      "status",
+      "confidence"
+    ],
+    "lesson_type_enum": [
+      "有效做法",
+      "无效做法",
+      "失败原因",
+      "方法适用条件",
+      "技能差距",
+      "流程改进"
+    ],
+    "note": "lesson_type 的六类定义来自 spec/00 与 SKILL.md §J：只保留有复用价值的——有效做法、无效做法、失败原因、方法适用条件、发现的技能差距、可改进流程。"
+  }
+}
