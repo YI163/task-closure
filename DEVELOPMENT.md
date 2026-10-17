@@ -110,7 +110,7 @@ task_update.py ─→ deliver.py
 测试套件就在 `tests/` 里（不另发「开发仓库」）。四条命令：
 
 ```
-python nav.py test            一条跑完 13 套（数据校验 + 反例 + 场景 + 10 套单测）
+python nav.py test            一条跑完 15 套（数据校验 + 反例 + 场景 + 12 套单测）
 tests/run_tests.py --all      场景测试（端到端，断言驱动；在隔离副本里跑）
 tests/invalid/run_rules.py    反例测试（每条校验规则配一个必失败样本）
 scripts/validate.py --all     数据完整性校验
@@ -132,9 +132,10 @@ scripts/validate.py --all     数据完整性校验
 ## 提交前自检清单
 
 ```
-□ python3 nav.py test                      13 套全过（Windows 用 python）
+□ python3 nav.py test                      15 套全过（Windows 用 python）
 □ 没有任何硬编码绝对路径（grep "/Users/"）
 □ 新脚本入口调用了 scripts/console.py 的 setup()（否则管道捕获会崩）
+□ 新增入口行为时更新 SKILL.md 的 description（tests/unit/test_skill_description.py 守护）
 □ 文本文件是 LF（.gitattributes 已固定，不要提交 CRLF）
 □ 新脚本不绕过 store.py
 □ 新的检查规则做了双向测试（造一个必失败样本证明它会失败）

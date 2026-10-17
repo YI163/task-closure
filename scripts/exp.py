@@ -265,13 +265,24 @@ def _text_of(value) -> str:
     return str(value or "")
 
 
+def _long_shared(shared: set[str]) -> list[str]:
+    """shared 里的 4 字中文片段（「同一件事」才会长片段重合，词表碰撞不会）。"""
+    return [gram for gram in shared if len(gram) == 4 and CJK_RUN.fullmatch(gram)]
+
+
 def _action_conflict(a: dict, b: dict) -> str | None:
     """recommended_action 语义相反（否定不对称 / 相反措辞）。"""
     ta, tb = str(a.get("recommended_action") or ""), str(b.get("recommended_action") or "")
     if not ta or not tb:
         return None
     shared = tokens_of(ta) & tokens_of(tb)
-    if len(shared) >= 2 and _negated(ta) != _negated(tb):
+    # 否定分支（v0.1.3 修误报）：同领域经验天然共享「单独/痛点/验证/机制」这类 2 字片段，
+    # 只看「≥2 个共享片段 + 否定不对称」几乎恒真——实测 4 对互不相干的经验被判
+    # G3-CONFLICT-ACTION，其中两对还是同一批写入的互补条目，等于把经验库封掉。
+    # 真冲突（「先与经理确认研究范围…」vs「不要先与经理确认研究范围…」）会共享
+    # 大量 4 字连续片段（实测 8 个）；词表碰撞不会。因此否定分支额外要求
+    # 至少一个 4 字中文共享片段。
+    if len(shared) >= 2 and _negated(ta) != _negated(tb) and _long_shared(shared):
         return f"同一做法一侧被否定（共享片段：{'、'.join(sorted(shared)[:4])}）：「{ta}」vs「{tb}」"
     # 相反措辞：要求两侧各自只含词对中的一侧，且确有共享片段（否则会把不相关做法误判为冲突）
     if shared:

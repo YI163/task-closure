@@ -198,7 +198,7 @@ python nav.py env
 | `LICENSE` | MIT |
 
 **依赖**：Python ≥ 3.9（3.9.6 / 3.12 实测通过）。**零第三方库。**
-Windows 11 + Python 3.12 已实测（v0.1.2）：13 套测试全过，Chrome 出图可用。
+Windows 11 + Python 3.12 已实测（v0.1.3）：15 套测试全过，Chrome 出图可用。
 
 ---
 
@@ -235,13 +235,66 @@ Windows 11 + Python 3.12 已实测（v0.1.2）：13 套测试全过，Chrome 出
 
 ---
 
+## 两台电脑共用经验库
+
+经验是**一条一个文件**的本地 JSON（`state/experience/*.json`），天然适合用 git 同步。
+推荐两种做法，按「代码与数据是否分开」选。
+
+### 方案 A（推荐）：私有数据仓库 + 目录链接
+
+- 代码仓库保持现状，可随时从上游更新；
+- 新建 **private** 仓库 `task-closure-data`，只放数据：`state/experience/`、`state/lessons/`，
+  可选 `state/user_skills.json` / `decisions.md`；
+- 两台电脑各 clone 一次，用目录链接把代码仓库的对应目录指过去：
+
+```powershell
+# Windows（Junction，本地 NTFS 通常不需要管理员权限；两台机器各做一次）
+New-Item -ItemType Junction -Path "<代码仓库>\state\experience" -Target "<数据仓库>\state\experience"
+New-Item -ItemType Junction -Path "<代码仓库>\state\lessons"    -Target "<数据仓库>\state\lessons"
+```
+
+```bash
+# macOS / Linux
+ln -s "<数据仓库>/state/experience" "<代码仓库>/state/experience"
+ln -s "<数据仓库>/state/lessons"    "<代码仓库>/state/lessons"
+```
+
+- 开工前：`git -C <数据仓库> pull --rebase`；收工后：`add / commit / push`；
+- 验证落点：`python nav.py env` 会打印「经验目录 / 教训目录」，链接安装时显示
+  `（链接 → <私有数据仓库>/state/experience）`——**这一行就是你确认经验写到哪的依据**。
+
+为什么这样能少冲突：两台电脑同时各写一条经验 → git 看到的是**两个新文件**，不会冲突。
+`state/tasks.json` 是单文件，容易冲突，所以**不要**把它放进同步范围。
+
+### 方案 B（更省事）：私有 fork 整个仓库
+
+把本仓库 fork 成 **private**，两台电脑都 clone 私有 fork；在私有 fork 里把
+`state/experience/` 的忽略去掉并提交数据。代码更新从公开上游合并：
+
+```bash
+git remote add upstream https://github.com/YI163/task-closure.git
+git fetch upstream && git merge upstream/main
+```
+
+优点是只有一个仓库；缺点是每次上游改 `.gitignore` / `CHANGELOG` 都可能要解冲突，
+而且代码更新与个人数据混在同一条历史里。
+
+### 不管选哪个
+
+- 仓库必须是 **Private**（`git remote -v` 确认推的是私有地址）；公开仓库只放代码；
+- **不要**用 OneDrive / iCloud 同步 `.git` 目录，也不要把数据仓库嵌套在代码仓库里；
+- 同一时间尽量只在一台电脑写经验，写完 push 再换机；
+- 冲突处理：经验是独立 JSON，保留两边文件即可（重名时改文件名并同步改 `experience_id`）。
+
+---
+
 ## 测试
 
 **测试是随包提供的**，一条命令跑完：
 
 ```bash
-python3 nav.py test           # 全部（Windows 实测约 27 秒）
-python3 nav.py test --quick   # 跳过场景测试（Windows 实测约 15 秒）
+python3 nav.py test           # 全部（Windows 实测约 30 秒）
+python3 nav.py test --quick   # 跳过场景测试（Windows 实测约 16 秒）
 ```
 
 | 套件 | 守什么 | 规模 |
@@ -249,7 +302,7 @@ python3 nav.py test --quick   # 跳过场景测试（Windows 实测约 15 秒）
 | 数据完整性校验 | `state/` 是否符合 `schema.json` | 500+ 项检查 |
 | **反例测试** | **每条校验规则都配一个「必失败」样本** | 53 个 |
 | 场景测试 | 端到端行为断言 | 157 条 |
-| 单元测试 | 依赖判断、项目根定位、渲染成功判定、控制台编码、换行符、隐私忽略、审计一致性、SKILL 行为探针、md2html、跨平台路径 | 10 套 |
+| 单元测试 | 依赖判断、项目根定位、渲染成功判定、经验冲突判定、技能摘要触发词、控制台编码、换行符、隐私忽略、审计一致性、SKILL 行为探针、md2html、跨平台路径 | 12 套 |
 
 **反例测试是这套东西的关键**：它保证校验规则不是摆设。
 本项目为此付过代价——有过「规则只注册了名字、检查代码没实现」的情况，
@@ -286,16 +339,16 @@ python3 nav.py --help        # 全部命令
 
 1. **它不会自己变聪明。** 规则要生效，得靠 AI 每次真的去读、真的照做。上面那条「必须分清的两件事」就是在说这个。
 2. **`spec/` 是必要依赖。** 脚本会读它。**不要删**，也不要只复制 `scripts/`。
-3. **测试随仓库提供**（`tests/`：157 条场景断言 + 53 条反例 + 10 套单测），
+3. **测试随仓库提供**（`tests/`：157 条场景断言 + 53 条反例 + 12 套单测），
    `python nav.py test` 一条命令跑完；CI 也会跑。
-4. **实测环境**：macOS + DSH（开发环境）；Windows 11 + Python 3.12（v0.1.2 补测，
-   13 套测试全过）。**Linux 未完整实测**——CI 的 Ubuntu 任务就是它的第一道验证。
+4. **实测环境**：macOS + DSH（开发环境）；Windows 11 + Python 3.12（v0.1.3 补测，
+   15 套测试全过）。**Linux 未完整实测**——CI 的 Ubuntu 任务就是它的第一道验证。
 
 ---
 
 ## 更新记录
 
-见 `CHANGELOG.md`。当前版本 `0.1.2`——**`0.x` 的意思是接口与数据契约仍可能变**，
+见 `CHANGELOG.md`。当前版本 `0.1.3`——**`0.x` 的意思是接口与数据契约仍可能变**，
 不是谦虚，是它还没在足够多的真实任务上验证过（见「已知限制」）。
 
 ## 许可

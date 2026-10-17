@@ -73,6 +73,18 @@ def show_env() -> int:
     print("Task Closure 环境自检")
     print(f"  项目根目录        : {resolved}")
     print(f"  数据目录          : {resolved / 'state'}")
+    # 经验/教训目录单独列：两台电脑共用经验库时，这两行会显示「链接 → 私有数据仓库」，
+    # 一眼能确认自己写的经验到底落到了哪份数据里。
+    for label, directory in (("经验目录", resolved / "state" / "experience"),
+                             ("教训目录", resolved / "state" / "lessons")):
+        link_note = ""
+        try:
+            real = directory.resolve()
+            if real != directory:
+                link_note = f"（链接 → {real}）"
+        except OSError:
+            pass
+        print(f"  {label}        : {directory}{link_note}")
     print(f"  Python            : {PY}")
     print(f"  {HOME_ENV:<17} : {configured if configured is not None else '（未设置，以脚本所在仓库为准）'}")
     if configured is None:
@@ -132,7 +144,7 @@ def show_help() -> int:
     print("例：")
     print("  python3 nav.py show                        # 任务是哪些")
     print("  python3 nav.py show --task TN-...           # 某个任务的完整现场")
-    print("  python3 nav.py test --quick                 # 快速自检（约 15 秒）")
+    print("  python3 nav.py test --quick                 # 快速自检（约 16 秒）")
     print("  python3 nav.py flow --init my_flow.json     # 生成流程图模板")
     print()
     print("第一次用：按顺序跑 init → test，然后让 AI 读 skills/task-navigator/SKILL.md")

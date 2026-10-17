@@ -95,6 +95,8 @@ def main() -> int:
         check(proc.returncode == 0 and str(dest) in out and str(dest / "state") in out,
               "env 认到副本根目录与数据目录（路径含中文+空格）", failures,
               out.strip().replace("\n", " / ")[:160])
+        check("经验目录" in out and "教训目录" in out,
+              "env 单独报告经验/教训目录（跨机共用经验库时用于确认落点）", failures)
 
         # 2) init → new → show → validate 全流程可用
         proc = run(["nav.py", "init"], dest)

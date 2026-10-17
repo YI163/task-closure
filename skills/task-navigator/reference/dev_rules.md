@@ -20,3 +20,21 @@
 
 ---
 
+## 新增「入口行为」时必须同步更新 SKILL.md 摘要（description）
+
+AI 决定「要不要加载这个 Skill」时，**只读得到 frontmatter 的 `description` 那一行**；
+正文要加载之后才可见。所以正文里写了入口、摘要里没有对应触发词，等于这个入口不存在。
+
+**动作清单**（新增或修改入口行为时）：
+1. 在 `skills/task-navigator/SKILL.md` 的 `description` 里补用户可能说的触发词；
+2. 在 `tests/unit/test_skill_description.py` 的 `REQUIRED_TRIGGERS` 登记该词；
+3. 若本机还有 `~/.agents/skills/task-closure/SKILL.md` 另一份副本，必须逐字同步
+   （用链接/联接安装则天然只有一份，推荐）；
+4. 跑 `python nav.py test`。
+
+**实测事故**：用户说「把这个存到经验里」，技能没有被加载（摘要里没有「经验」二字），
+AI 转去用了通用记忆工具。正文里那张「记经验 → 复盘门禁」的对照表根本没机会被看到。
+
+> 这条只能保证「摘要含触发词」，**不能**保证模型一定选中技能——那取决于模型判断，
+> 没有脚本能测。别把测试通过说成「加载可靠」。
+
