@@ -131,7 +131,11 @@ def main(argv: list[str]) -> int:
         f"来源提交      : {commit}\n"
         "用途          : T01–T14 真实执行；本副本内的所有改动都不影响正式项目\n"
     )
-    (dest / "TEST_WORKSPACE_ORIGIN.txt").write_text(origin, encoding="utf-8", newline="\n")
+    # 用 open(..., newline="\n") 而不是 write_text(newline=...)：后者是 Python 3.10
+    # 才加的参数，3.9 上直接 TypeError（CI ubuntu 3.9 已复现）。固定 LF 是为了
+    # 副本内容与主仓库一致（哈希校验依赖换行符）。
+    with (dest / "TEST_WORKSPACE_ORIGIN.txt").open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(origin)
 
     print(f"隔离副本已建立：{dest}")
     print(f"来源提交：{commit}")
