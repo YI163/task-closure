@@ -26,6 +26,8 @@ Git for Windows 默认 `core.autocrlf=true`，检出时把 LF 转成 CRLF。
 或者直接重新 clone。不要改这个测试去迁就换行符——哈希校验会随之失效。
 """
 
+from __future__ import annotations
+
 import pathlib
 import subprocess
 import sys

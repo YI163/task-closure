@@ -22,6 +22,8 @@ Windows 中文环境下，Python 的 stdout **一旦不是控制台**（管道�
 > 所以本地「过了」不代表没价值：CI 的 windows 矩阵会真正跑到它。
 """
 
+from __future__ import annotations
+
 import pathlib
 import subprocess
 import sys
