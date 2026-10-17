@@ -78,6 +78,30 @@ def step_by_id(task: dict, step_id: str) -> dict:
     die(f"任务 {task['task_id']} 中没有步骤 {step_id}。已知步骤：{known or '（无）'}")
 
 
+def step_dependencies(step: dict, plan_step_ids: set[str]) -> list[str]:
+    """返回该步骤的**结构化**依赖（精确 step_id）。
+
+    数据契约（schema 1.8）：
+      · `depends_on_step_ids` 才是调度用的依赖：精确匹配、必须指向本任务已有步骤；
+      · `inputs_or_dependencies` 是**自然语言**的输入/前置条件说明，不参与阻塞判断。
+
+    旧数据兼容：若没有 `depends_on_step_ids`，而 `inputs_or_dependencies` 里有一项
+    **恰好等于**本任务某个 step_id（例如 ["S1"]），按旧语义视为依赖。
+    这里只做「整串精确相等」，**绝不做子串匹配**——旧实现用
+    `"S1" in "S10"` 判断，会让依赖 S1 被已完成的 S10 错误满足。
+
+    显式给了空的 depends_on_step_ids（[]）表示「确认无依赖」，不再回落到旧字段。
+    """
+    explicit = step.get("depends_on_step_ids")
+    if isinstance(explicit, list):
+        return [str(item) for item in explicit if str(item).strip()]
+
+    legacy = step.get("inputs_or_dependencies")
+    if not isinstance(legacy, list):
+        return []
+    return [str(item) for item in legacy if isinstance(item, str) and item in plan_step_ids]
+
+
 def recompute_next_action(task: dict) -> None:
     """按现状推导下一步建议（不是硬编码答案，而是从状态里读出来的）。"""
     if task.get("status") == "awaiting_acceptance":
@@ -103,17 +127,21 @@ def recompute_next_action(task: dict) -> None:
         return
 
     pending = [s for s in task.get("plan", []) if s.get("status") not in ("done", "skipped")]
-    done_ids = {c.get("step_id") for c in task.get("completed_steps", [])}
+    plan_step_ids = {str(s.get("step_id")) for s in task.get("plan", []) if s.get("step_id")}
+    done_ids = {str(c.get("step_id")) for c in task.get("completed_steps", [])}
     for step in pending:
         if step.get("step_id") in done_ids:
             continue
-        blocked_by = [d for d in step.get("inputs_or_dependencies", []) if d]
-        unmet = [d for d in blocked_by if not any(str(d) in str(c) for c in done_ids)]
+        blocked_by = step_dependencies(step, plan_step_ids)
+        unmet = [d for d in blocked_by if d not in done_ids]
         if unmet:
-            task["next_best_action"] = {
-                "action": f"先完成前置条件：{', '.join(map(str, unmet))}",
-                "reason": f"步骤 {step['step_id']}《{step.get('name')}》被依赖阻塞，跳过前置会返工",
-            }
+            unknown = [d for d in unmet if d not in plan_step_ids]
+            action = f"先完成前置条件：{', '.join(map(str, unmet))}"
+            reason = f"步骤 {step['step_id']}《{step.get('name')}》被依赖阻塞，跳过前置会返工"
+            if unknown:
+                action += f"（其中不存在的步骤 ID：{', '.join(unknown)}，请修正计划）"
+                reason += "；依赖引用了不存在的步骤 ID，未满足前不得跳过"
+            task["next_best_action"] = {"action": action, "reason": reason}
             return
         task["next_best_action"] = {
             "action": f"{step.get('step_id')} {step.get('name')}",

@@ -1,6 +1,6 @@
 {
-  "schema_version": "1.7",
-  "note": "Task Navigator 数据契约的唯一权威定义。scripts/validate.py 依据本文件校验 state/ 下所有数据。字段名遵循 spec/03_SKILLS_AND_EXPERIENCE_MEMORY.md。修改本文件必须同时提升 schema_version 并在 decisions.md 记录，且迁移前必须备份。",
+  "schema_version": "1.8",
+  "note": "Task Navigator 数据契约的唯一权威定义。scripts/validate.py 依据本文件校验 state/ 下所有数据。字段名遵循 spec/03_SKILLS_AND_EXPERIENCE_MEMORY.md。修改本文件必须同时提升 schema_version、在 decisions.md 记录（对外可见的变更另记 CHANGELOG.md），且迁移前必须备份。1.8 变更说明：新增可选字段 tasks[].plan[].depends_on_step_ids（结构化步骤依赖，精确匹配 step_id）；inputs_or_dependencies 明确为自然语言说明、不参与阻塞判断。迁移策略：新字段可选，旧数据无需改写；旧字段中「恰好等于某个 step_id」的条目仍按旧语义参与依赖判断，validate.py 报 T-STEP-DEP-LEGACY 警告提示迁移；写入侧 task_new.py 拒绝未知/自依赖/重复。升级前按 store 的写前备份机制自动快照 state/（state/backups/<UTC>）。",
   "changelog": {
     "1.1": "由 storage-builder 的契约偏差审查促成（见 decisions.md）：(a) plan[].required_skills 每项的字段名统一为 skill_ref（原文档误写 skill_id，实际代码与数据均为 skill_ref），语义为并集——skill_ref 可指向技能档案中的某个 skill_id 值，也可以是自由文本；交叉引用校验仅对确实匹配到档案条目时才强制。(b) 登记 task_update.py 实际写入但原 schema 未声明的字段：tasks[].acceptance、tasks[].verdict、experiences[].review_history、experiences[].counterexample_resolutions。(c) 明确 tasks[].plan_history（重规划时归档的旧计划）。 (d) methods.optional_fields 正式登记 limitations——field_rules 与 validate.py 的 M-UNVERIFIED 规则本就在读它，此前未登记属契约遗漏。",
     "1.0": "初版：四域分离 + 跨引用 + 技能不得虚假升级与经验未执行不得记为已验证的门禁。",
@@ -172,7 +172,8 @@
       "decision_authority": "对象，来自 spec/01 §4A：{can_decide_alone: [..], must_ask: [{question, whom}, ..]}。记录「用户可自行决定什么」与「什么需要询问任务发起人」——它决定了后续哪些动作可以直接推进、哪些必须先沟通。多来源任务（如老板/家人发起）应填写；纯个人任务可省略。",
       "experiences_used": "数组；每项 {experience_id, why_applicable}。experience_id 必须存在于 state/experience/，why_applicable 必须非空并说明适用条件——依据 spec/03 §7-6「在计划中简短说明采用了哪些经验、为什么适用」。",
       "methods_used": "数组；每项 {method_id, why}。method_id 必须存在于 methods/index.json——「用了哪条方法」必须可追溯（spec/03 §7-6）。字段已在 schema 正式登记（此前为契约偏差）。",
-      "required_skills[]": "数组；每项 {skill_ref, gap?, adaptation?, note?}。skill_ref 可以是档案 ID（SK-YYYYMMDD-NNN）或自由文本（某项尚不在档案里的技能）。**standard/deep 档位下，自由文本引用必须给出 gap 或 archive_status，明确写出「该技能的用户状态未知」**——否则「技能缺口改变指导」这条要求在自由文本路径上没有落点。依据 spec/01 §4D 与 spec/03 §4：指导方式必须由用户在技能上的状态决定，不能默认。"
+      "required_skills[]": "数组；每项 {skill_ref, gap?, adaptation?, note?}。skill_ref 可以是档案 ID（SK-YYYYMMDD-NNN）或自由文本（某项尚不在档案里的技能）。**standard/deep 档位下，自由文本引用必须给出 gap 或 archive_status，明确写出「该技能的用户状态未知」**——否则「技能缺口改变指导」这条要求在自由文本路径上没有落点。依据 spec/01 §4D 与 spec/03 §4：指导方式必须由用户在技能上的状态决定，不能默认。",
+      "plan[].depends_on_step_ids": "可选数组；每项必须是同任务 plan 中已存在的 step_id（精确匹配，禁止子串匹配）。语义：调度依赖——只有这些步骤都出现在 completed_steps 里，本步骤才被视为前置已满足。不得引用不存在的步骤、不得自依赖、不得重复登记（validate.py 报 T-STEP-DEP-*，task_new.py 写入侧直接拒绝）。与 inputs_or_dependencies 的分工：后者是自然语言的前置/输入说明，不参与阻塞判断（schema 1.8 明确）。"
     },
     "step_required_fields": [
       "step_id",
@@ -220,6 +221,7 @@
     },
     "step_optional_fields": [
       "inputs_or_dependencies",
+      "depends_on_step_ids",
       "time_estimate",
       "estimate_basis",
       "risks_and_fallbacks",

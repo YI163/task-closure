@@ -48,12 +48,50 @@ def guard(path: Path) -> Path:
 def write_json(path: Path, data) -> None:
     path = guard(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # 固定 LF：Windows 的文本模式会把 \n 翻成 \r\n，生成的样本会与仓库里的 LF 版本
+    # 不一致（哈希/指纹全变，test_line_endings 也会失败）。
+    # 不用 write_text(newline=...)——那是 Python 3.10 才有的参数。
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
 
 
 # ---------------------------------------------------------------- 合法基线
 
+_BASELINE_CACHE: dict[str, object] | None = None
+
+
+def _load_baseline_from_disk() -> dict[str, object] | None:
+    """读取仓库里现有的 baseline/ 作为真源；不存在时返回 None（回落到引导模板）。
+
+    为什么要有这条路径：硬编码模板 `_bootstrap_tree()` 会随字段演进过期。
+    实测：模板里 risks_and_fallbacks / communication / time_estimate 都是空的，
+    而 committed baseline 早已补全——直接用模板生成会把现有样本**降级**。
+    baseline 是全部反例的对照真源，生成器应该从它派生，而不是从另一份会过期的副本派生。
+    """
+    root = HERE / "baseline"
+    if not (root / "state" / "tasks.json").is_file():
+        return None
+    tree: dict[str, object] = {}
+    for relative in _bootstrap_tree():          # 用模板的键表决定读取哪些文件
+        path = root / relative
+        if path.is_file():
+            tree[relative] = json.loads(path.read_text(encoding="utf-8"))
+    return tree or None
+
+
 def baseline_tree() -> dict[str, object]:
+    """返回基线树（深拷贝）。首次调用优先读现有 baseline/，之后走缓存。
+
+    缓存很关键：main() 会先清空 tests/invalid/ 再生成，而 seam/conflict/privacy
+    等样本树都调用本函数——不缓存就会在清空后回落到过期模板。
+    """
+    global _BASELINE_CACHE
+    if _BASELINE_CACHE is None:
+        _BASELINE_CACHE = _load_baseline_from_disk() or _bootstrap_tree()
+    return copy.deepcopy(_BASELINE_CACHE)
+
+
+def _bootstrap_tree() -> dict[str, object]:
     task = {
         "task_id": "TN-20260101-001",
         "title": "基线样本：证明反例失败来自注入的违规",
@@ -360,6 +398,21 @@ def mutate(tree: dict, mutation: str) -> dict:
                 "status": "pending",
             }
         ]
+    elif mutation == "usage_ref_unknown_method":
+        tasks[0]["methods_used"] = [{"method_id": "no-such-method", "why": "测试用"}]
+    elif mutation == "usage_ref_unknown_experience":
+        tasks[0]["experiences_used"] = [{"experience_id": "EXP-99999999-999", "why_applicable": "测试用"}]
+    elif mutation == "usage_ref_missing_why":
+        tasks[0]["experiences_used"] = [{"experience_id": "EXP-20260101-001", "why_applicable": ""}]
+    elif mutation == "step_dep_unknown":
+        # schema 1.8：结构化依赖精确匹配；引用不存在的 S9 必须报错
+        tasks[0]["plan"][1]["depends_on_step_ids"] = ["S9"]
+    elif mutation == "step_dep_self":
+        # schema 1.8：自依赖永远无法满足
+        tasks[0]["plan"][1]["depends_on_step_ids"] = ["S2"]
+    elif mutation == "inputs_dependency_legacy":
+        # schema 1.8：旧字段里裸写 S1 仍按旧语义参与依赖判断，但必须提示迁移
+        tasks[0]["plan"][1]["inputs_or_dependencies"] = ["S1"]
     elif mutation == "unchanged":
         pass
     elif mutation == "new_fields_valid_shape":
@@ -465,6 +518,22 @@ _EXTRA_CASES: list[tuple[str, str, str, str, tuple, str]] = [
      "executor=ai 但缺 delegation_reason → 非零退出（AI 代做必须有理由）"),
     ("R36_light_step_missing_executor", "light_step_missing_executor", "fail", "T-STEP-EXECUTOR", (),
      "light 深度步骤同样必须声明执行者 → 非零退出（没有执行者的步骤同样不是步骤）"),
+    # R37–R39 此前是手工补进 rules/ 的，没写进生成器——直接跑 make_samples.py 会把它们删掉。
+    # 本轮补进生成器，保证「生成器跑一遍 = 样本集合」。
+    ("R37_usage_ref_unknown_method", "usage_ref_unknown_method", "fail", "T-USAGE-REF", (),
+     "methods_used 引用了不存在于 methods/index.json 的 method_id → 应非零退出（核审 t25 的 N6）"),
+    ("R38_usage_ref_unknown_experience", "usage_ref_unknown_experience", "fail", "T-USAGE-REF", (),
+     "experiences_used 引用了不存在的 experience_id → 应非零退出（核审 t25 的 N6）"),
+    ("R39_usage_ref_missing_why", "usage_ref_missing_why", "fail", "T-USAGE-REF", (),
+     "experiences_used 缺 why_applicable → 应非零退出：说了用哪条经验却不说什么适用，等于没留痕"),
+    # schema 1.8：步骤依赖必须是精确 step_id；旧字段只做迁移提示
+    ("R40_step_dep_unknown", "step_dep_unknown", "fail", "T-STEP-DEP-UNKNOWN", (),
+     "depends_on_step_ids 引用不存在的 S9 → 非零退出（未知依赖不得静默当作已满足）"),
+    ("R41_step_dep_self", "step_dep_self", "fail", "T-STEP-DEP-SELF", (),
+     "步骤依赖自己 → 非零退出（自依赖永远无法开始）"),
+    ("R42_inputs_dependency_legacy", "inputs_dependency_legacy", "pass_with_warning", "T-STEP-DEP-LEGACY",
+     ("T-STEP-DEP-UNKNOWN", "T-STEP-DEP-SELF"),
+     "旧字段 inputs_or_dependencies 里裸写 S1 → exit 0 但必须报迁移警告（旧字段不参与阻塞判断）"),
 ]
 
 # 需要「删掉某个文件」的样本：额外数据域缺失的反例（R31 不写 methods/index.json）
@@ -787,6 +856,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="生成 validate.py 的反例样本（只写 tests/invalid/）")
     parser.parse_args()
 
+    # 先读出真源（现有 baseline/），再清空目录。
+    # 顺序反了会出事：baseline 被删后 baseline_tree() 只能回落到过期模板，
+    # 生成的样本会缺字段（实测：risks/communication/time_estimate 全部丢失）。
+    base = baseline_tree()
+
     for sub in ("baseline", "rules", "exp_seam", "exp_conflict", "exp_privacy", "exp_privacy_warn", "backups"):
         target = guard(HERE / sub)
         if target.exists():
@@ -794,7 +868,7 @@ def main() -> int:
         target.mkdir(parents=True)
 
     # 基线：必须通过
-    materialise(HERE / "baseline", baseline_tree())
+    materialise(HERE / "baseline", base)
 
     # 反例：基线 + 一处违规（omit 里的文件不写，用于「必需数据域缺失」这类反例）
     for case in CASES:

@@ -208,11 +208,30 @@ def append_line(path: Path, obj) -> None:
 
 
 def find_project_root() -> Path:
-    """返回项目根目录；附带健全性检查，避免把文件写到意外位置。"""
+    """返回项目根目录；附带健全性检查，避免把文件写到意外位置。
+
+    路径守卫：如果用户显式设置了 TASK_CLOSURE_HOME，而它与本脚本所在仓库不一致，
+    这里必须发出**可见的警告**（nav.py 会直接拒绝执行，但直接调脚本的路径不能静默）。
+    为什么不一并抛错：测试会在临时副本里直接执行脚本，环境变量继承自外部，
+    硬失败会让测试无法运行；而「静默」才是真正危险的那部分。
+    """
     if not SCHEMA_PATH.exists():
         raise StoreError(
             f"未找到数据契约 {SCHEMA_PATH}，当前目录不是 任务导航 项目根目录。"
         )
+    configured = os.environ.get("TASK_CLOSURE_HOME", "").strip()
+    if configured:
+        try:
+            configured_path = Path(configured).expanduser().resolve()
+        except OSError:
+            configured_path = Path(configured).expanduser()
+        if os.path.normcase(str(configured_path)) != os.path.normcase(str(PROJECT_ROOT)):
+            print(
+                f"警告：TASK_CLOSURE_HOME={configured_path}，但本次读写的是 {PROJECT_ROOT / 'state'}。"
+                "若这不是你想操作的仓库，请先 cd 到正确目录或修正该环境变量；"
+                "`python nav.py env` 会打印实际目录并阻止不一致的调用。",
+                file=sys.stderr,
+            )
     return PROJECT_ROOT
 
 

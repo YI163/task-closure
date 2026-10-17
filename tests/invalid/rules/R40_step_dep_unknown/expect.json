@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-STEP-DEP-UNKNOWN",
+  "absent": [],
+  "why": "depends_on_step_ids 引用不存在的 S9 → 非零退出（未知依赖不得静默当作已满足）"
+}

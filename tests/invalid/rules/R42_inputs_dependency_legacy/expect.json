@@ -1,0 +1,9 @@
+{
+  "kind": "pass_with_warning",
+  "rule": "T-STEP-DEP-LEGACY",
+  "absent": [
+    "T-STEP-DEP-UNKNOWN",
+    "T-STEP-DEP-SELF"
+  ],
+  "why": "旧字段 inputs_or_dependencies 里裸写 S1 → exit 0 但必须报迁移警告（旧字段不参与阻塞判断）"
+}

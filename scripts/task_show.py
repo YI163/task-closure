@@ -212,8 +212,17 @@ def render_detail(task: dict, brief: bool) -> None:
         if step.get("time_estimate"):
             basis = step.get("estimate_basis")
             print(f"      预计耗时：{step['time_estimate']}" + (f"（依据：{basis}）" if basis else ""))
+        # 依赖（结构化）与前置说明（自然语言）分开显示：前者决定是否阻塞，后者只是说明。
+        deps = step.get("depends_on_step_ids")
+        if deps:
+            plan_ids = {s.get("step_id") for s in task.get("plan", [])}
+            rendered = "、".join(
+                f"{d}（{'不存在' if d not in plan_ids else ('已完成' if d in completed else '未完成')}）"
+                for d in map(str, deps)
+            )
+            print(f"      依赖：{rendered}")
         if step.get("inputs_or_dependencies"):
-            print(f"      前置：{'；'.join(map(str, step['inputs_or_dependencies']))}")
+            print(f"      前置条件：{'；'.join(map(str, step['inputs_or_dependencies']))}")
         skills = step.get("required_skills") or []
         if skills:
             readable = [

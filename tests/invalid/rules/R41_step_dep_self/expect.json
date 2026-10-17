@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-STEP-DEP-SELF",
+  "absent": [],
+  "why": "步骤依赖自己 → 非零退出（自依赖永远无法开始）"
+}

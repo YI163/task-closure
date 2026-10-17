@@ -1,6 +1,6 @@
 [project]
 name = "task-closure"
-version = "0.1.1"
+version = "0.1.2"
 description = "把模糊任务变成可执行、能跟踪、最终可验收的闭环。带状态的任务工作方式，不是提示词。"
 readme = "README.md"
 requires-python = ">=3.9"

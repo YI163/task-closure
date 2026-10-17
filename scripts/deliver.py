@@ -266,28 +266,6 @@ def check(task_id: str) -> int:
                     "**不是把多份不同文档并成一个文件**"
                 )
 
-    # 行动清单检查（SKILL.md §0 第 10 条：交付必须包含「一步一步做什么」的流程文件）
-    task_dir = DELIVERABLES / task_id
-
-    # 同一内容多种格式检查 —— **查桌面（用户实际看到的地方），不查项目内**
-    # 为什么位置很关键（实测纠错）：第一次把这条加在项目内目录上，
-    # 结果报「流程总览 → [.html,.pdf,.png]」——但项目内**必须**保留渲染源
-    # （PNG 是 PDF 的来源），用户看不到项目内。用户要求「只留一种格式」针对的是**桌面交付目录**。
-    if DESKTOP.is_dir():
-        import collections as _c
-        for d in sorted(x for x in DESKTOP.iterdir() if x.is_dir()):
-            _g: dict[str, list[str]] = _c.defaultdict(list)
-            for f in d.iterdir():
-                if f.is_file() and not f.name.startswith(".") and f.suffix.lower() in (
-                        ".html", ".png", ".pdf", ".jpg", ".svg"):
-                    _g[f.stem].append(f.suffix.lower())
-            for k, v in _g.items():
-                if len(v) > 1:
-                    problems.append(
-                        f"桌面 {d.name}/ 里「{k}」有 {len(v)} 种格式 {v}——"
-                        "用户要求同一内容只留一种（流程图明确要求只留 PDF）"
-                    )
-
     # 覆盖对照检查：来源里写明的清单，产出里是否都有
     # 背景：用户问「有没有什么能让你做得更好、更准确的办法」——
     # 实测最有效的是「换个角度并排看」，但此前一直依赖用户或审查员来做。

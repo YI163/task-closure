@@ -26,12 +26,65 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 PY = sys.executable
+
+# 项目根目录的显式配置项（可选）。
+#
+# 为什么需要它：本 Skill 可以被链接到 ~/.agents/skills/ 供所有工作区加载，
+# 那时「Skill 文件在哪」与「任务数据/仓库在哪」不是一回事。若只靠推算，
+# AI 可能对着错误的目录操作，或悄悄建出第二套 state/。
+# 约定：设置了 TASK_CLOSURE_HOME 就必须与本仓库一致；不一致时 nav.py 直接拒绝执行。
+HOME_ENV = "TASK_CLOSURE_HOME"
+
+
+def configured_home() -> Path | None:
+    raw = os.environ.get(HOME_ENV, "").strip()
+    if not raw:
+        return None
+    try:
+        return Path(raw).expanduser().resolve()
+    except OSError:
+        return Path(raw).expanduser()
+
+
+def _same_path(left: Path, right: Path) -> bool:
+    # Windows 路径大小写不敏感；normcase 同时统一分隔符
+    return os.path.normcase(str(left)) == os.path.normcase(str(right))
+
+
+def home_mismatch() -> Path | None:
+    """TASK_CLOSURE_HOME 已设置且与脚本所在仓库不一致时返回该目录，否则 None。"""
+    configured = configured_home()
+    if configured is None or _same_path(configured, ROOT.resolve()):
+        return None
+    return configured
+
+
+def show_env() -> int:
+    """打印当前实际使用的目录，并自检 TASK_CLOSURE_HOME 是否一致。"""
+    resolved = ROOT.resolve()
+    configured = configured_home()
+    print("Task Closure 环境自检")
+    print(f"  项目根目录        : {resolved}")
+    print(f"  数据目录          : {resolved / 'state'}")
+    print(f"  Python            : {PY}")
+    print(f"  {HOME_ENV:<17} : {configured if configured is not None else '（未设置，以脚本所在仓库为准）'}")
+    if configured is None:
+        print("  状态              : 未设置环境变量（用脚本自身位置定位，不存在第二套状态）")
+        return 0
+    if _same_path(configured, resolved):
+        print("  状态              : 一致")
+        return 0
+    print("  状态              : 不一致 —— 已停止，避免写进第二套 state/")
+    print(f"  处理：① 在 {configured} 里执行；② 或把 {HOME_ENV} 改成 {resolved}；③ 或临时取消该环境变量")
+    return 5
+
 
 # (命令, 对应脚本, 一句话说明, 是否属于「日常必用」)
 COMMANDS = [
@@ -59,6 +112,9 @@ def show_help() -> int:
     print()
     print("用法：python3 nav.py <命令> [参数…]")
     print()
+    print("先跑这个（换机器 / 换目录后尤其重要）：")
+    print(f"  {'env':<12} 打印当前项目根目录、数据目录、Python，并自检 {HOME_ENV}")
+    print()
     print("日常必用：")
     for cmd, script, desc, daily in COMMANDS:
         if daily:
@@ -76,7 +132,7 @@ def show_help() -> int:
     print("例：")
     print("  python3 nav.py show                        # 任务是哪些")
     print("  python3 nav.py show --task TN-...           # 某个任务的完整现场")
-    print("  python3 nav.py test --quick                 # 快速自检（约 3 秒）")
+    print("  python3 nav.py test --quick                 # 快速自检（约 15 秒）")
     print("  python3 nav.py flow --init my_flow.json     # 生成流程图模板")
     print()
     print("第一次用：按顺序跑 init → test，然后让 AI 读 skills/task-navigator/SKILL.md")
@@ -89,6 +145,22 @@ def main(argv: list[str]) -> int:
         return show_help()
 
     name, rest = args[0], args[1:]
+
+    # 环境自检：打印实际使用的目录，并检查 TASK_CLOSURE_HOME 是否一致
+    if name == "env":
+        return show_env()
+
+    # 路径守卫：环境变量指向别的仓库时不许继续。
+    # 否则「以为在操作 A 仓库、实际写进 B 仓库的 state/」这种事只能靠事后发现。
+    mismatch = home_mismatch()
+    if mismatch is not None:
+        print(f"错误：{HOME_ENV} 指向 {mismatch}", file=sys.stderr)
+        print(f"      但本次执行的是 {ROOT.resolve()}", file=sys.stderr)
+        print("两份目录不一致时不允许继续——那会把状态写进第二套 state/，或在错误仓库上操作。", file=sys.stderr)
+        print(f"处理：① 在 {mismatch} 里执行；② 或把 {HOME_ENV} 改成 {ROOT.resolve()}；"
+              "③ 或临时取消该环境变量。", file=sys.stderr)
+        print(f"（先跑 `python nav.py env` 看它到底读的是哪个目录）", file=sys.stderr)
+        return 5
 
     # 查表
     target = None

@@ -17,8 +17,8 @@
 
 ## 用法
 
-    python3 tests/run_all.py            # 跑全部三套
-    python3 tests/run_all.py --quick    # 跳过场景测试（只跑数据校验 + 反例，约 3 秒）
+    python3 tests/run_all.py            # 跑全部套件
+    python3 tests/run_all.py --quick    # 跳过场景测试（约 15 秒）
     python3 tests/run_all.py --verbose  # 打印每套的完整输出
 
 退出码：0 = 全部通过；1 = 有失败；2 = 环境问题（找不到测试文件等）。

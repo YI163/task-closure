@@ -56,6 +56,35 @@ git rm --cached -r .
 git reset --hard
 ```
 
+### 装好之后：告诉 AI 数据在哪
+
+```powershell
+# Windows（当前会话；长期生效请设系统环境变量）
+$env:TASK_CLOSURE_HOME = "<仓库路径>"
+
+# 装成用户级 Skill（让所有工作区都能加载）：目录联接，通常不需要管理员权限
+New-Item -ItemType Junction -Path "$HOME\.agents\skills\task-closure" `
+  -Target "<仓库路径>\skills\task-navigator"
+
+# 自检：打印实际使用的项目根目录 / 数据目录 / Python
+python nav.py env
+```
+
+`macOS / Linux` 对应写法：
+
+```bash
+export TASK_CLOSURE_HOME="<仓库路径>"
+ln -s "$TASK_CLOSURE_HOME/skills/task-navigator" ~/.agents/skills/task-closure
+python nav.py env
+```
+
+**看到 `状态：不一致` 就停下来**：说明环境变量指向的仓库和本次执行的仓库不是同一个，
+nav.py 会返回退出码 5 拒绝执行——这是为了防止把状态写进第二套 `state/`。
+
+> **安装 ≠ 生效**：本仓库已验证 Windows 上的 Python 脚本与测试；
+> 但 **Windows + DSH 的 Skill 自动加载链路尚未实测**，且「AI 读到规则」也不等于
+> 「AI 会遵守规则」。证据边界见 README「证据边界」一节，不要把测试通过当成行为可靠。
+
 路径类命令的两种写法：
 
 | 用途 | macOS / Linux | Windows PowerShell |

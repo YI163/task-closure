@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -157,22 +158,98 @@ def build_html(spec: dict) -> str:
     return "\n".join(L)
 
 
+def _tail(result) -> str:
+    text = ((result.stdout or "") + (result.stderr or "")).strip()
+    return " | ".join(text.splitlines()[-3:]) if text else "（无输出）"
+
+
+def _run_chrome(base: list[str], args: list[str]) -> tuple[object | None, str]:
+    """跑一次 Chrome；返回 (CompletedProcess 或 None, 超时说明)。"""
+    try:
+        return (
+            subprocess.run(
+                base + args,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=120,
+            ),
+            "",
+        )
+    except subprocess.TimeoutExpired:
+        return None, "渲染超时（>120 秒）"
+    except OSError as exc:
+        return None, f"无法启动浏览器：{exc}"
+
+
 def render(html_path: Path, png_path: Path, pdf_path: Path | None,
            width: int, height: int) -> tuple[bool, str]:
+    """渲染 PNG（必需）与 PDF（给了 pdf_path 就是必需）。
+
+    ## 为什么不能只看「目标文件存在」
+
+    审查报告 P1-3：旧实现在 Chrome 跑完后只判断 `png_path.is_file()`。
+    如果目录里本来就躺着上一次成功的 PNG，而本次渲染失败，旧文件会让
+    程序误判成功——对一个强调证据的工具，这是「旧证据冒充本次结果」。
+
+    现在的做法：
+      1. 开始前先删除同名旧产物（失败时绝不留着「看起来成功」的旧文件）；
+      2. 每次渲染先写 `<name>.part`，**检查子进程退出码 + 文件非空**后才原子替换；
+      3. PNG 失败返回 False 且明确说是 PNG；PDF 给了就必须成功，否则也返回 False；
+      4. 错误里带 Chrome 的输出尾部，便于定位。
+    """
     chrome = store.find_chrome()
     if chrome is None:
         return False, store.chrome_help_text()
+
     base = [str(chrome), "--headless", "--disable-gpu", "--hide-scrollbars",
             "--force-device-scale-factor=2", "--default-background-color=FFFFFFFF"]
-    r = subprocess.run(base + [f"--screenshot={png_path}",
-                               f"--window-size={width},{height}", str(html_path)],
-                       capture_output=True, text=True, timeout=120)
-    if not png_path.is_file():
-        return False, (r.stdout + r.stderr)[-300:]
-    if pdf_path:
-        subprocess.run(base + [f"--print-to-pdf={pdf_path}", "--no-pdf-header-footer",
-                               str(html_path)], capture_output=True, timeout=120)
-    return True, ""
+
+    # 旧产物先清掉：它们不是本次渲染的证据
+    for target in (png_path, pdf_path):
+        if target is not None:
+            target.unlink(missing_ok=True)
+
+    # 临时文件必须保留真实扩展名：Chrome 靠后缀判断截图格式，
+    # `--screenshot=x.png.part` 会直接报 "Unsupported screenshot image file type: .part"。
+    # 用「点开头」的隐藏名：即使异常残留，也不会被交付检查的 glob("*") 当成渲染产物。
+    token = f".{os.getpid()}"
+    png_tmp = png_path.with_name(f"{token}-{png_path.name}")
+    pdf_tmp = pdf_path.with_name(f"{token}-{pdf_path.name}") if pdf_path is not None else None
+    try:
+        png_tmp.unlink(missing_ok=True)
+        result, error = _run_chrome(
+            base,
+            [f"--screenshot={png_tmp}", f"--window-size={width},{height}", str(html_path)],
+        )
+        if error:
+            return False, f"PNG {error}"
+        if result.returncode != 0:
+            return False, f"PNG 渲染失败（Chrome exit={result.returncode}）：{_tail(result)}"
+        if not png_tmp.is_file() or png_tmp.stat().st_size == 0:
+            return False, f"PNG 渲染失败：没有产出非空文件。{_tail(result)}"
+        os.replace(png_tmp, png_path)
+
+        if pdf_tmp is not None:
+            pdf_tmp.unlink(missing_ok=True)
+            result, error = _run_chrome(
+                base, [f"--print-to-pdf={pdf_tmp}", "--no-pdf-header-footer", str(html_path)]
+            )
+            if error:
+                return False, f"PDF {error}"
+            if result.returncode != 0:
+                return False, f"PDF 渲染失败（Chrome exit={result.returncode}）：{_tail(result)}"
+            if not pdf_tmp.is_file() or pdf_tmp.stat().st_size == 0:
+                return False, f"PDF 渲染失败：没有产出非空文件。{_tail(result)}"
+            os.replace(pdf_tmp, pdf_path)
+
+        return True, ""
+    finally:
+        # 无论成败都清理临时文件（旧产物已在开头删掉，失败不会留下假证据）
+        png_tmp.unlink(missing_ok=True)
+        if pdf_tmp is not None:
+            pdf_tmp.unlink(missing_ok=True)
 
 
 def main(argv: list[str]) -> int:

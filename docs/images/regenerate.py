@@ -117,7 +117,9 @@ DEMO_STEPS = [
      "executor": "joint", "executor_basis": "AI 出结构与初稿，本人定口径",
      "time_estimate": "2 小时", "estimate_basis": "含一轮返工",
      "risks_and_fallbacks": ["口径把握不准 → 先出提纲给总监确认再展开"], "status": "pending",
-     "inputs_or_dependencies": ["依赖 S1 的核对结果"],
+     # schema 1.8：依赖用结构化字段；inputs 只是自然语言说明，不参与阻塞判断
+     "depends_on_step_ids": ["S1"],
+     "inputs_or_dependencies": ["S1 的核对结果"],
      "communication": ["需与总监确认：结论页要回答哪三个问题"]},
 ]
 

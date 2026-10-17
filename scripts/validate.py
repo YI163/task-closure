@@ -130,6 +130,12 @@ RULES: dict[str, str] = {
     "T-STEP-DELEGATION": "executor=ai 时必须写明 delegation_reason（AI 代做必须有理由；schema 枚举四选一）",
     "T-STEP-DELEGATION-ENUM": "delegation_reason 必须是 schema 枚举（极紧期限/高代价/纯机械劳动/用户明确要求）之一",
     "T-STEP-DELEGATION-STALE": "【警告】executor≠ai 的步骤不应保留 delegation_reason（那是 AI 代做的理由）",
+    "T-STEP-DEP": "depends_on_step_ids 必须是数组，每项为非空字符串（步骤 ID）——依赖必须能被精确解析，不能靠猜",
+    "T-STEP-DEP-UNKNOWN": "depends_on_step_ids 引用的步骤必须存在于同任务 plan 中——未知依赖不得静默当作已满足",
+    "T-STEP-DEP-SELF": "步骤不得依赖自己（自依赖永远无法满足，会让 next_best_action 永久卡住）",
+    "T-STEP-DEP-DUP": "同一步骤的依赖不得重复登记",
+    "T-STEP-DEP-LEGACY": "【警告】inputs_or_dependencies 里出现了本任务的步骤 ID：依赖请写进 depends_on_step_ids。"
+                          "旧字段按自然语言处理、不参与阻塞判断（schema 1.8 契约），不迁移会让下一步建议忽略该依赖",
     "T-XREF-STEP": "completed_steps.step_id 必须存在于同任务的 plan 中",
     "T-XREF-SKILL": "skill_ref/skill_id 仅在「等于档案中现有 skill_id」或「形如 ^SK-\\d{8}-\\d{3}$」时才强制存在于 user_skills.json（schema 1.1 并集语义；自由文本不查档案）",
     "T-ACCEPTANCE": "tasks[].acceptance 结构：三问 {verdict: yes|partial|no, basis: 非空} + closed_at/列表字段类型",
@@ -708,6 +714,60 @@ def check_tasks(ctx: Context, report: Report) -> int:
                 report.check()
                 if step.get("status") not in ctx.enums.get("step_status", []):
                     report.error("T-STEP-STATUS", swe, f"status={step.get('status')!r} 不在 step_status 枚举内")
+
+        # 步骤依赖（schema 1.8）：只认结构化的 depends_on_step_ids，精确匹配 step_id。
+        # 【为什么单独做这一轮】旧实现把 inputs_or_dependencies 的任意字符串按「子串包含」
+        # 判断完成情况，依赖 S1 会被已完成的 S10 错误满足（外部审查报告 P1-1）。
+        # 新契约：depends_on_step_ids = 调度依赖；inputs_or_dependencies = 自然语言说明。
+        # 兼容策略：旧字段里「恰好等于某个真实 step_id」的条目按旧语义视为依赖，
+        # 但只提示迁移（警告），不改写数据、不硬失败。
+        for sindex, step in enumerate(plan):
+            swe = f"{where}.plan[{sindex}]"
+            deps = step.get("depends_on_step_ids")
+            if deps is not None:
+                report.check()
+                if not isinstance(deps, list):
+                    report.error("T-STEP-DEP", swe, "depends_on_step_ids 必须是数组")
+                else:
+                    seen_deps: set[str] = set()
+                    for dindex, dep in enumerate(deps):
+                        dwe = f"{swe}.depends_on_step_ids[{dindex}]"
+                        report.check()
+                        if not isinstance(dep, str) or not dep.strip():
+                            report.error("T-STEP-DEP", dwe, "依赖必须是非空字符串（步骤 ID）")
+                            continue
+                        if dep == step.get("step_id"):
+                            report.error("T-STEP-DEP-SELF", dwe, f"步骤 {dep!r} 不能依赖自己")
+                        elif dep not in step_ids:
+                            known = "、".join(sorted(step_ids)) or "（无）"
+                            report.error(
+                                "T-STEP-DEP-UNKNOWN", dwe,
+                                f"依赖的步骤 {dep!r} 不在同任务的 plan 中（已知：{known}）"
+                                "——未知依赖不得静默当作已满足",
+                            )
+                        if dep in seen_deps:
+                            report.error("T-STEP-DEP-DUP", dwe, f"依赖 {dep!r} 重复登记")
+                        seen_deps.add(dep)
+
+            # 旧字段迁移提示：只在**没有**结构化依赖时才提示，避免迁移完成后还一直报警。
+            legacy_field = step.get("inputs_or_dependencies") if deps is None else None
+            if isinstance(legacy_field, list):
+                mentioned: list[str] = []
+                for item in legacy_field:
+                    if not isinstance(item, str):
+                        continue
+                    for sid in sorted(step_ids):
+                        if re.search(rf"(?<![A-Za-z0-9_-]){re.escape(sid)}(?![A-Za-z0-9_-])", item):
+                            mentioned.append(sid)
+                            break
+                if mentioned:
+                    report.check()
+                    report.warn(
+                        "T-STEP-DEP-LEGACY", swe,
+                        f"inputs_or_dependencies 提到了步骤 {'、'.join(sorted(set(mentioned)))}，"
+                        "但依赖判据只看 depends_on_step_ids（schema 1.8：旧字段按自然语言说明处理）。"
+                        "请把依赖写进 depends_on_step_ids；否则下一步建议不会因该依赖阻塞",
+                    )
 
         if isinstance(plan, list) and not plan and task.get("status") in OPEN_TASK_STATUSES:
             report.check()

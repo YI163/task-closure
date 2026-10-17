@@ -100,7 +100,8 @@ def normalise_plan(raw_plan, depth: str) -> tuple[list[dict], list[tuple]]:
                     )
                 )
         # 列表字段类型校验：与 validate.py 同一套判断标准（字符串/对象会被校验器判为违规）
-        for field in ("actions", "required_skills", "inputs_or_dependencies", "risks_and_fallbacks", "communication"):
+        for field in ("actions", "required_skills", "inputs_or_dependencies",
+                      "risks_and_fallbacks", "communication", "depends_on_step_ids"):
             if field in step and not isinstance(step[field], list):
                 die(f"plan 第 {index} 步的 {field} 必须是数组，收到 {type(step[field]).__name__}。")
 
@@ -182,6 +183,28 @@ def normalise_plan(raw_plan, depth: str) -> tuple[list[dict], list[tuple]]:
             step["time_estimate"] = "未估算"
             step["estimate_basis"] = "本次未做时间估算（避免无依据的精确数字）"
         steps.append(step)
+
+    # 步骤依赖（schema 1.8）：写入侧也挡一次——未知/自依赖/重复必须在建档时拒绝，
+    # 而不是等校验器报错或让 next_best_action 永远卡住。
+    # 数据契约：depends_on_step_ids 是调度依赖（精确 step_id）；
+    # inputs_or_dependencies 是自然语言的前置说明，不参与阻塞判断。
+    plan_step_ids = {str(item.get("step_id")) for item in steps}
+    for index, step in enumerate(steps, start=1):
+        deps = step.get("depends_on_step_ids")
+        if deps is None:
+            continue
+        seen: set[str] = set()
+        for dep in deps:
+            if not isinstance(dep, str) or not dep.strip():
+                die(f"plan 第 {index} 步的 depends_on_step_ids 每项必须是非空字符串（步骤 ID）。")
+            if dep == str(step.get("step_id")):
+                die(f"plan 第 {index} 步不能依赖自己（{dep}）——那会让它永远无法开始。")
+            if dep not in plan_step_ids:
+                known = "、".join(sorted(plan_step_ids)) or "（无）"
+                die(f"plan 第 {index} 步依赖的步骤 {dep!r} 不存在。已知步骤：{known}")
+            if dep in seen:
+                die(f"plan 第 {index} 步的依赖 {dep!r} 重复登记。")
+            seen.add(dep)
     return steps, normalised
 
 

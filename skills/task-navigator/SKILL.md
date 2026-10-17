@@ -7,7 +7,7 @@ description: 任务执行导航员——把工作、生活、学习、家庭或�
 
 你是 任务导航 的执行者。目标不是「给一份漂亮的建议」，而是**帮助用户真正把任务做完**。
 
-## 0. 十一条硬前置（每次任务相关对话的第一步）
+## 0. 十三条硬前置（每次任务相关对话的第一步）
 
 1. **先读状态，再开口。** 运行 `python3 scripts/task_show.py`（已知任务用 `--task <id>`）。没有这一步就不要回答进度、下一步或验收相关问题——不许凭对话印象猜测。
 2. **不改事实。** 所有状态变更必须通过 `scripts/task_update.py` 落盘。禁止只在对话里说「已记录」而没有实际写入。
@@ -129,21 +129,34 @@ description: 任务执行导航员——把工作、生活、学习、家庭或�
 | **不确定性处理** | 哪些是已核实事实 / 来源观点 / AI 推断 / 未确认假设 | 不许把推断写成事实 |
 | **禁止事项** | 涉及外部动作（发送/购买/提交/删除）是否已标出需授权 | 未标出即计划不完整 |
 
-**项目根目录（固定，与 Skill 文件放在哪无关）**：
+**项目根目录：每次开工先解析，不要凭记忆，也不要写死路径**
 
+本 Skill **不绑定任何固定路径**。项目根目录按以下顺序确定：
+
+1. 环境变量 `TASK_CLOSURE_HOME` 指向的目录（安装了多份仓库时**必须**设置，避免写错副本）；
+2. 未设置时 = **本 Skill 文件实际所在仓库的根目录**（即包含 `nav.py` 与 `state/schema.json` 的那一级；
+   若是链接，指链接指向的那个仓库）。
+
+**Skill 的安装位置 ≠ 数据位置**：本 Skill 可能被链接到 `~/.agents/skills/`
+（供所有工作区加载），那只是**文件**被放到那里；任务数据永远在项目根目录的 `state/` 下。
+
+**每次会话第一次操作前先跑**（换机器 / 换目录 / 换工作区后尤其重要）：
+
+```bash
+python nav.py env
 ```
-$HOME/Documents/deepseek-harness/AI_Mission/Task-Navigator
-```
 
-**为什么写死绝对路径**：本 Skill 同时存在于两个位置——
-① 项目内 `Task-Navigator/skills/task-navigator/`（原始位置）
-② 用户级 `~/.agents/skills/task-closure/`（供**所有工作区**自动加载）
+它会打印实际使用的「项目根目录 / 数据目录 / Python」，并检查 `TASK_CLOSURE_HOME`
+是否与实际一致；不一致时 **nav.py 会拒绝执行**（退出码 5），不允许静默写进第二套 `state/`。
 
-**只有 ① 的"上一级"才是项目根目录；② 的上一级是 `~/.agents/skills/`，不是项目。**
-所以不能再用相对推算——**一律用上面这个绝对路径**。
+> 路径含中文或空格时必须加引号：`cd "C:\Users\me\我的 仓库"`。
+> Python 用当前可用的 `python` / `python3` 即可——本项目零第三方依赖，
+> **不需要**任何私有 runtime 路径。
+> 若 `env` 显示的数据目录不是你想操作的那一份：先修正 `TASK_CLOSURE_HOME` 或换目录，
+> **不要**在错误目录里继续——那会建出第二套状态。
 
-*方案二语义*：一份数据、多个工作区共享。在任何工作区加载到本 Skill，都读写同一个
-`Task-Navigator/state/`，因此任务列表是同一份，不分散。
+*方案二语义*：一份数据、多个工作区共享。任何工作区加载到本 Skill 时，
+读写的都是同一个项目根目录下的 `state/`，因此任务列表是同一份。
 
 
 ---
@@ -299,21 +312,22 @@ $HOME/Documents/deepseek-harness/AI_Mission/Task-Navigator
 > 改脚本或校验规则时，先读 `reference/dev_rules.md`。
 
 ```bash
-# 项目根目录固定（见上）；一律用 $HOME 写法，避免换机器/换用户后失效
-NAV=$HOME/Documents/deepseek-harness/AI_Mission/Task-Navigator
-PY=$HOME/.dsh/dsh-runtimes/dsh-primary-runtime/dependencies/python/bin/python3
-# 若 DSH 的 python 不可用：PY=python3 亦可（脚本只用标准库，已实测系统 3.9 通过）
-cd "$NAV"
+# 先确认目录（含空格/中文必须加引号；PowerShell 同理）
+python nav.py env
+cd "<项目根目录>"          # PowerShell: cd "$env:TASK_CLOSURE_HOME"
 
-$PY scripts/task_show.py                 # 进行中任务总览
-$PY scripts/task_show.py --task TN-...   # 单个任务完整现场
-$PY scripts/task_show.py --task TN-... --brief
-$PY scripts/task_new.py --input <任务.json>
-$PY scripts/task_update.py step --task TN-... --file <变更.json>   # 另有 evidence/decision/blocker/change/next/status/unknown/skillgap/close
-$PY scripts/validate.py --all            # 数据完整性校验
-$PY scripts/status.py                    # 生成人类可读 STATUS.md
-$PY scripts/exp.py search --query "..."  # 经验检索（带适用性判断）
+python nav.py show                       # 进行中任务总览
+python nav.py show --task TN-...         # 单个任务完整现场
+python nav.py show --task TN-... --brief
+python nav.py new --input <任务.json>
+python scripts/task_update.py step --task TN-... --file <变更.json>   # 另有 evidence/decision/blocker/change/next/status/unknown/skillgap/close
+python nav.py validate                   # 数据完整性校验
+python nav.py status                     # 生成人类可读 STATUS.md
+python nav.py exp search --query "..."   # 经验检索（带适用性判断）
 ```
+
+> `python3` 不存在时用 `python`（Windows 常见）。直接调 `scripts/` 下的脚本与
+> `nav.py` 等价，`nav.py` 只是统一入口。
 
 ## 5. 数据在哪、怎么改
 

@@ -60,8 +60,7 @@
           ],
           "required_skills": [
             {
-              "skill_ref": "自由文本技能描述（不是档案 id）",
-              "gap": "未评估：测试夹具用途，按 can_with_checklist 对待"
+              "skill_ref": "自由文本技能描述（不是档案 id）"
             }
           ],
           "executor": "joint",

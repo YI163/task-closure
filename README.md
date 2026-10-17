@@ -113,14 +113,55 @@ DSH 有一个扫描 Skill 目录的组件 `@deepseek-ai/dsh-skill-filesystem`。
 然后用软链接把 Skill 装到用户级目录（**真身唯一，改一处两边生效**）：
 
 ```bash
+# macOS / Linux
 ln -s "$(pwd)/skills/task-navigator" ~/.agents/skills/task-closure
 ```
 
-重启 DSH 后，在任意工作区都能用 `skill` 工具加载 `task-closure`。
+```powershell
+# Windows PowerShell：目录联接（Junction），本地 NTFS 上通常不需要管理员权限。
+# 若提示权限不足：开启「开发人员模式」或用管理员 PowerShell；
+# 也可以直接复制目录，但之后改仓库不会自动同步（不推荐）。
+New-Item -ItemType Junction -Path "$HOME\.agents\skills\task-closure" `
+  -Target "<仓库路径>\skills\task-navigator"
+```
 
-> **我如实说明证据强度**：上面这套配置在作者本机实测**配置文件生效、语法校验通过**，
-> 但**「重启后能加载」这一步的最终验证尚未完成**（写这份文档时还没重启）。
-> 如果你配了之后仍然加载不到，请提 issue 告诉我。
+**告诉 AI 数据在哪**（装了多份仓库、或用 Junction 时强烈建议设置）：
+
+```powershell
+# Windows（当前会话；长期生效请用「系统环境变量」）
+$env:TASK_CLOSURE_HOME = "<仓库路径>"
+```
+
+```bash
+# macOS / Linux
+export TASK_CLOSURE_HOME="<仓库路径>"
+```
+
+之后：
+
+```bash
+python nav.py env
+```
+
+会打印**实际使用**的项目根目录、数据目录与 Python。若 `TASK_CLOSURE_HOME`
+与脚本所在仓库不一致，nav.py 会直接拒绝执行（退出码 5）——不允许静默写进第二套 `state/`。
+未设置时以脚本所在仓库为准，单仓库用户可以不管它。
+
+**Skill 的安装位置 ≠ 数据位置**：`~/.agents/skills/...` 只是 Skill 文件放的地方；
+任务与经验永远在仓库的 `state/` 下。任何脚本都可以用 `python nav.py env` 自证数据目录。
+
+### 证据边界：这四件事必须分开看
+
+| 事项 | 状态 | 证据 |
+|---|---|---|
+| Windows 上的 Python 脚本 / 测试套件 | ✅ 已验证 | GitHub Actions 6 格（Ubuntu/Windows × 3.9/3.11/3.12）+ Windows 11 本机实测 |
+| Windows 上的浏览器出图（Chrome/Edge → PNG/PDF） | ✅ 本机已验证 | Windows 11 实测；**CI 不覆盖**（runner 没装浏览器） |
+| Windows 下 DSH profile 配置 + Skill 自动加载 | ⚠️ **未验证** | 只验证了配置文件语法；Windows 上的 Junction、重启后能否被发现未实测 |
+| 新会话中 AI 是否实际读取并遵守 Skill | ⚠️ **无法由测试证明** | 这是行为问题，不是代码问题 |
+
+> **不要把前三项中任何一项的通过，当成第四项的证据。**
+> 配置生效 ≠ 能被发现 ≠ AI 会读 ≠ AI 会遵守。
+> 如果你在 Windows 上配好了这一整套，欢迎提 issue 报告实际结果——目前它就是未验证状态。
 
 ### 必须分清的两件事
 
@@ -130,13 +171,16 @@ ln -s "$(pwd)/skills/task-navigator" ~/.agents/skills/task-closure
 
 ```
 有代码强制（不满足直接拒绝）的规则      7 条  → 从未被违反
-半强制（会被追问，但要靠 AI 如实回答）   3 条  → 偶尔被违反
+半强制（会被追问，但要靠 AI 如实回答）   2 条  → 偶尔被违反
 纯自觉（没有任何检查点）               3 条  → 反复被违反
 ```
 
-> 这三行不是手数的：跑 `python3 scripts/audit.py`，它逐条检查「依据」是否真的存在于代码里。
-> 当前纯自觉的 3 条是第 3 条（不假装）、第 4 条（写计划前读规则）、第 12 条（交付物过多时软删）。
-> **审计表本身也会和文档脱节**——v0.1.1 修过一次：表里漏了第 11、12 条，数字对不上。
+> 这三行不是手数的：跑 `python3 scripts/audit.py`，它逐条检查依据是否真的存在。
+> 从 v0.1.2 起，审计把「源码里有这个词」与「行为测试证明运行时会拒绝」分开：
+> 当前 7 条机械 + 2 条半机械由 `tests/unit/test_skill_guards.py` 的**行为探针**证实；
+> 第 2 条（状态变更走脚本）只有源码线索、**未行为验证**；第 3、4、12 条纯自觉。
+> **审计表本身也会和文档脱节**——v0.1.1 修过一次（表里漏了第 11、12 条），
+> v0.1.2 起由 `tests/unit/test_audit_consistency.py` 守着条数与编号。
 
 **所以「可靠执行」靠的是检查点，不是加载。** 详见 `skills/task-navigator/SKILL.md`。
 
@@ -147,14 +191,47 @@ ln -s "$(pwd)/skills/task-navigator" ~/.agents/skills/task-closure
 | 目录 | 内容 |
 |---|---|
 | `skills/task-navigator/` | **核心**：`SKILL.md`（行为契约）+ 5 份 reference |
-| `scripts/` | 17 个脚本：建档 / 更新 / 展示 / 校验 / 复盘 / 交付检查 / 出图 / 导出 |
+| `scripts/` | 21 个 .py：功能脚本 + 数据层 `store.py` + 工具 `console.py` / `make_test_workspace.py` |
 | `spec/` | 需求与验收依据（脚本会读它来判断"做到了没有"） |
 | `methods/` | 8 类公开方法论 + 选择规则 |
 | `state/schema.json` | 数据契约。**必须保留**——删了脚本会报错 |
 | `LICENSE` | MIT |
 
 **依赖**：Python ≥ 3.9（3.9.6 / 3.12 实测通过）。**零第三方库。**
-Windows 11 + Python 3.12 已实测（v0.1.1）：7 套测试全过，Chrome 出图可用。
+Windows 11 + Python 3.12 已实测（v0.1.2）：13 套测试全过，Chrome 出图可用。
+
+---
+
+## 隐私：经验与任务数据会被提交吗？
+
+**默认不会。** 任务与经验都是**本地纯文本 JSON**，随仓库推送的是工具本身，不是你的使用记录：
+
+| 内容 | 位置 | 会随 git 提交吗 |
+|---|---|---|
+| 任务状态 / 事件流 | `state/tasks.json`、`state/tasks.jsonl` | ❌ 已忽略 |
+| 领域经验库（一条一个文件） | `state/experience/*.json` | ❌ 已忽略 |
+| 流程教训 | `state/lessons/*.json` | ❌ 已忽略 |
+| 经验派生索引 | `state/experience_index.md` | ❌ 已忽略（v0.1.2 补齐） |
+| 交付物 / 导出 | `outputs/` | ❌ 已忽略 |
+| 备份 / 流程图 / 覆盖率 / 自审 | `state/backups/`、`state/flowcharts/`、`state/coverage_checks/`、`state/self_reviews/` | ❌ 已忽略 |
+| 测试证据与运行报告 | `reports/evidence/`、`reports/TEST_RUN_REPORT.md` | ❌ 已忽略 |
+| 状态总览 | `STATUS.md` | ❌ 已忽略（v0.1.2 补齐） |
+| 决策记录 | `decisions.md` | ❌ 已忽略（v0.1.2 补齐） |
+| 技能档案 | `state/user_skills.json` | ⚠️ **在版本库里**（作为脱敏示例） |
+
+**唯一需要你判断的是 `state/user_skills.json`**：它是「既是示例又被跟踪」的文件。
+如果你把自己的真实技能档案写进去，`git add -A && git push` 会把它推上去。三种做法任选：
+
+1. **保持它是脱敏示例**，真实档案放到私有 fork / 另一份不被跟踪的档案里；
+2. **提交前核对**：`git diff --stat state/user_skills.json`，确认没有个人信息再提交；
+3. **仓库设为私有**（私有仓库不出现在公开搜索中，但仍会进入你的 GitHub 账号数据）。
+
+> 查当前工作区到底哪些文件会被提交：`git status --short`、`git ls-files state`。
+> 验证敏感派生文件确实被忽略：
+> `git check-ignore -v state/experience_index.md STATUS.md decisions.md`
+>
+> v0.1.2 之前，`state/experience_index.md` / `STATUS.md` / `decisions.md` **没有**被忽略，
+> 用旧版本用过一阵子再升级的人请检查自己的 git 历史里是否已误提交（见 CHANGELOG）。
 
 ---
 
@@ -163,16 +240,16 @@ Windows 11 + Python 3.12 已实测（v0.1.1）：7 套测试全过，Chrome 出�
 **测试是随包提供的**，一条命令跑完：
 
 ```bash
-python3 nav.py test           # 全部（Windows 实测约 22 秒）
-python3 nav.py test --quick   # 跳过场景测试（Windows 实测约 10 秒）
+python3 nav.py test           # 全部（Windows 实测约 27 秒）
+python3 nav.py test --quick   # 跳过场景测试（Windows 实测约 15 秒）
 ```
 
 | 套件 | 守什么 | 规模 |
 |---|---|---|
 | 数据完整性校验 | `state/` 是否符合 `schema.json` | 500+ 项检查 |
-| **反例测试** | **每条校验规则都配一个「必失败」样本** | 50 个 |
+| **反例测试** | **每条校验规则都配一个「必失败」样本** | 53 个 |
 | 场景测试 | 端到端行为断言 | 157 条 |
-| 单元测试 | 单点逻辑（跨平台路径、控制台编码、换行符、md2html） | 4 套 |
+| 单元测试 | 依赖判断、项目根定位、渲染成功判定、控制台编码、换行符、隐私忽略、审计一致性、SKILL 行为探针、md2html、跨平台路径 | 10 套 |
 
 **反例测试是这套东西的关键**：它保证校验规则不是摆设。
 本项目为此付过代价——有过「规则只注册了名字、检查代码没实现」的情况，
@@ -180,6 +257,8 @@ python3 nav.py test --quick   # 跳过场景测试（Windows 实测约 10 秒）
 
 **CI**：每次 push / PR 在 Ubuntu 与 Windows 上、Python 3.9 / 3.11 / 3.12 自动跑全部测试。
 Windows 那一格是 v0.1.1 补的——此前只有 Ubuntu，所以「Windows 没跑过」一直没人挡。
+（CI 通过只能说明这些测试在上述环境通过，**不能**说明 AI 会遵守 Skill，也不能代替
+Windows + DSH 自动加载的实机验证——见上面「证据边界」。）
 
 ## 一条命令看它能干什么
 
@@ -207,16 +286,16 @@ python3 nav.py --help        # 全部命令
 
 1. **它不会自己变聪明。** 规则要生效，得靠 AI 每次真的去读、真的照做。上面那条「必须分清的两件事」就是在说这个。
 2. **`spec/` 是必要依赖。** 脚本会读它。**不要删**，也不要只复制 `scripts/`。
-3. **测试随仓库提供**（`tests/`：157 条场景断言 + 50 条反例 + 4 套单测），
+3. **测试随仓库提供**（`tests/`：157 条场景断言 + 53 条反例 + 10 套单测），
    `python nav.py test` 一条命令跑完；CI 也会跑。
-4. **实测环境**：macOS + DSH（开发环境）；Windows 11 + Python 3.12（v0.1.1 补测，
-   7 套测试全过）。**Linux 未完整实测**——CI 的 Ubuntu 任务就是它的第一道验证。
+4. **实测环境**：macOS + DSH（开发环境）；Windows 11 + Python 3.12（v0.1.2 补测，
+   13 套测试全过）。**Linux 未完整实测**——CI 的 Ubuntu 任务就是它的第一道验证。
 
 ---
 
 ## 更新记录
 
-见 `CHANGELOG.md`。当前版本 `0.1.1`——**`0.x` 的意思是接口与数据契约仍可能变**，
+见 `CHANGELOG.md`。当前版本 `0.1.2`——**`0.x` 的意思是接口与数据契约仍可能变**，
 不是谦虚，是它还没在足够多的真实任务上验证过（见「已知限制」）。
 
 ## 许可

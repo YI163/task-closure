@@ -56,5 +56,17 @@ outputs/
 reports/evidence/
 reports/TEST_RUN_REPORT.md
 
+# ── 派生/生成物：包含真实任务与经验内容（v0.1.2 补齐）──
+# 这三份都是「用过之后才生成」的文件，内容直接来自你的任务与经验：
+#   · state/experience_index.md —— 经验索引（标题/结论/适用条件）
+#   · STATUS.md                —— 全部任务的状态总览
+#   · decisions.md             —— 决策记录（what/why）
+# 之前漏掉它们，`git add -A && push` 会把个人内容直接推上去。
+state/experience_index.md
+STATUS.md
+decisions.md
+
 # 注意：state/schema.json 与 state/user_skills.json **不排除**——
 # 前者是数据契约（删了脚本全崩），后者是脱敏示例档案（让你一开始跑得起来）。
+# ⚠️ user_skills.json 是唯一「既是示例又被跟踪」的文件：如果你把真实技能档案写进去，
+#    提交前请换成脱敏示例，或改用私有 fork（详见 README「隐私」一节）。

@@ -32,13 +32,22 @@
               "gap": "未评估：测试夹具用途，按 can_with_checklist 对待"
             }
           ],
+          "executor": "user",
           "executor_basis": "样本：字段对照涉及用户自己的数据，必须本人确认，AI 不能替他决定",
           "deliverable": "一份合法的 tasks.json",
           "completion_criteria": "validate.py --all 对基线 exit 0",
-          "inputs_or_dependencies": [],
-          "risks_and_fallbacks": [],
-          "communication": [],
-          "status": "done"
+          "inputs_or_dependencies": [
+            "不适用：本步是流程起点，无前置"
+          ],
+          "risks_and_fallbacks": [
+            "不适用：填写记录为固定动作，无实质风险"
+          ],
+          "communication": [
+            "不适用：本步骤无外部依赖方"
+          ],
+          "status": "done",
+          "time_estimate": "约 10 分钟",
+          "estimate_basis": "按填写一份完整任务记录估算"
         },
         {
           "step_id": "S2",
@@ -61,9 +70,15 @@
           "inputs_or_dependencies": [
             "S1"
           ],
-          "risks_and_fallbacks": [],
-          "communication": [],
-          "status": "pending"
+          "risks_and_fallbacks": [
+            "若注入的违规未被检出，说明校验规则失效——需人工复核规则是否真的在执行"
+          ],
+          "communication": [
+            "不适用：本步骤无外部依赖方"
+          ],
+          "status": "pending",
+          "time_estimate": "约 10 分钟",
+          "estimate_basis": "按注入一处违规并复跑校验估算"
         },
         {
           "step_id": "S3",
@@ -87,9 +102,15 @@
           "inputs_or_dependencies": [
             "S1"
           ],
-          "risks_and_fallbacks": [],
-          "communication": [],
-          "status": "pending"
+          "risks_and_fallbacks": [
+            "不适用：表格整理为机械动作"
+          ],
+          "communication": [
+            "不适用：本步骤无外部依赖方"
+          ],
+          "status": "pending",
+          "time_estimate": "约 5 分钟",
+          "estimate_basis": "按整理三列对比表估算"
         }
       ],
       "deliverables": [],

@@ -32,6 +32,7 @@
               "gap": "未评估：测试夹具用途，按 can_with_checklist 对待"
             }
           ],
+          "executor": "user",
           "executor_basis": "样本：字段对照涉及用户自己的数据，必须本人确认，AI 不能替他决定",
           "deliverable": "一份合法的 tasks.json",
           "completion_criteria": "validate.py --all 对基线 exit 0",

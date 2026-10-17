@@ -8,6 +8,112 @@
 
 ---
 
+## [0.1.2] — 2026-10-17
+
+按外部审查报告《Task Closure 最新版本审查与修改意见报告》逐项修复。
+基准提交 `06a2a29`。
+
+### P1-1 任务依赖判断：从「字符串包含」改为「精确 step_id」
+
+**问题**：`recompute_next_action()` 用 `str(d) in str(c)` 判断依赖是否完成，
+依赖 `S1` 会被已完成的 `S10` 错误满足；`inputs_or_dependencies` 里的自然语言
+（如「依赖 S1 的核对结果」）又被当成 ID 做包含比较，导致任务永久阻塞。
+
+**修复**：
+
+- schema `1.7 → 1.8`，新增可选字段 `plan[].depends_on_step_ids`（结构化依赖）；
+- `inputs_or_dependencies` 明确为**自然语言说明**，不参与阻塞判断；
+- 旧数据无损兼容：旧字段里**整串恰好等于某个真实 step_id** 的条目仍按旧语义参与判断，
+  `validate.py` 报 `T-STEP-DEP-LEGACY` 提示迁移；不改写旧数据、不需要迁移脚本；
+- 未知依赖 / 自依赖 / 重复依赖：写入侧 `task_new.py` 直接拒绝，读侧 `validate.py` 报
+  `T-STEP-DEP-UNKNOWN` / `T-STEP-DEP-SELF` / `T-STEP-DEP-DUP`；
+- `task_show.py` 分开显示「依赖」（带完成状态）与「前置条件」。
+
+数据安全：无字段删除、无旧数据改写；升级后第一次写操作仍按 `store.py` 规则自动备份到
+`state/backups/<UTC>/`。回滚只需把 schema 与代码退回 v0.1.1——新字段是可选的，
+旧代码会把它当作未知字段登记（`T-EXTRA` 说明），不影响读取。
+
+### P1-2 移除 SKILL.md 里作者机器的硬编码路径
+
+删掉 `$HOME/Documents/...` 与作者私有 Python runtime 路径。项目根目录改为：
+
+1. 环境变量 `TASK_CLOSURE_HOME`（装了多份仓库时必须设置）；
+2. 未设置时 = Skill 所在仓库根目录。
+
+新增 `python nav.py env`：打印实际使用的项目根目录 / 数据目录 / Python。
+`TASK_CLOSURE_HOME` 与实际目录不一致时 **nav.py 拒绝执行（exit 5）**；
+直接调脚本时 `store.find_project_root()` 打可见警告。README / USER_GUIDE 补了
+PowerShell 联接（Junction）与含中文/空格路径的写法。
+
+### P1-3 流程图渲染：旧产物不能再冒充本次成功
+
+`render()` 原来只看 `png_path.is_file()`。现在：
+
+- 渲染前删除同名旧产物；
+- 每次先写 `<name>.part`，**检查退出码 + 文件非空**后才原子替换；
+- PNG / PDF 都必须成功，失败信息明确指出格式并带 Chrome 输出尾部；
+- `main()` 在失败时返回非零退出码。
+
+### P1-4 审计器：区分「源码线索」与「行为测试证实」
+
+`audit.py` 原来以「源码里出现某个字符串」判定「机械」，注释里写个词也算。
+现在每条声称「机械」的规则都必须关联 `tests/unit/test_skill_guards.py` 里的
+可复跑行为探针；探针失败 → 审计非零退出。输出分四档：
+机械/半机械（行为测试证实）、静态线索（未行为验证）、纯自觉。
+当前：7 机械 + 2 半机械（行为测试）、1 静态线索、3 纯自觉。
+审计表与 SKILL.md 的条数/编号由 `tests/unit/test_audit_consistency.py` 守着
+（SKILL.md 标题也同步改成「十三条硬前置」）。
+
+### P2-5 清理 deliver.py 重复检查区块
+
+删掉第二份「桌面同一内容多格式」扫描与多余注释/赋值，只保留一处权威实现。
+行为探针 `deliver-dedup` 断言：无冲突报 0 次、有冲突只报 1 次。
+
+### P2-6 Windows + DSH 安装说明与证据边界
+
+README 增加「证据边界」表，把四件事分开：Windows Python 测试 /
+Windows 浏览器出图 / Windows 下 DSH 自动加载 / AI 是否遵守。
+**Windows + DSH 自动加载仍是未验证状态**（只验证了配置语法），文档里明确写「未验证」，
+不再用「重启后能加载」这类未验证断言。USER_GUIDE 补 PowerShell 安装链路。
+
+### 隐私：补齐会泄露个人内容的忽略规则
+
+用户问「push 之后经验会不会暴露」。检查发现三项**没有**被 `.gitignore` 覆盖：
+
+- `state/experience_index.md`（经验索引：标题/结论/适用条件）
+- `STATUS.md`（全部任务状态总览）
+- `decisions.md`（决策记录）
+
+已补进 `.gitignore`，并由 `tests/unit/test_privacy_gitignore.py` 守护。
+仍存在的一个限制如实说明：`state/user_skills.json` 是**有意跟踪**的脱敏示例，
+如果你把真实技能档案写进去，它仍会被提交（README「隐私」一节给了三种处理办法）。
+
+### 附带修复：反例样本生成器与 committed 样本脱节
+
+`tests/invalid/make_samples.py` 的硬编码模板早已过期（缺 risks/communication/time_estimate），
+直接运行会把所有样本**降级**，还会删掉手工补的 R37–R39。现在生成器优先从现有
+`baseline/` 派生；并补进 R37–R39 与新增 R40–R42；`write_json` 固定 LF（Windows 上
+否则会产生 CRLF 样本，`test_line_endings` 会失败）。
+
+### 测试与验证
+
+- 测试套件：7 → **13 套**（3 核心 + 10 单测），反例 50 → **53 个**；
+- 新增单测：依赖判断、项目根定位（中文+空格路径全流程）、渲染成功判定、
+  SKILL 行为探针、审计一致性、隐私忽略；
+- 本机（Windows 11 / Python 3.12）：`python nav.py test` 13/13 通过（约 27 秒）；
+  `python scripts/audit.py` exit 0（7 机械行为证实 / 2 半机械 / 1 静态线索 / 3 纯自觉）；
+- CI：Ubuntu + Windows × Python 3.9 / 3.11 / 3.12（结果见对应提交的 Actions）。
+
+### 已知限制（本轮未解决）
+
+- **Windows + DSH 的 Skill 自动加载未实测**；作者本机 macOS 侧的「重启后加载」也未复测。
+- **AI 是否遵守 Skill 无法由测试证明**：CI 全绿只说明代码与测试在该环境通过。
+- `state/user_skills.json` 仍是跟踪文件（见上）。
+- Linux 无本机环境，仅 CI 覆盖。
+- 审计里第 2 条（状态变更走脚本）仍只是静态线索，没有可靠的行为探针。
+
+---
+
 ## [0.1.1] — 2026-10-17
 
 ### 修复：Windows 上跑不起来（补测时 5 套测试全挂）
