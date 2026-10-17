@@ -75,7 +75,10 @@ def prepare_copy(base: pathlib.Path) -> pathlib.Path:
         if child.name in keep:
             continue
         shutil.rmtree(child) if child.is_dir() else child.unlink()
-    return dest
+    # 必须返回**解析后**的路径：GitHub Windows runner 的 TEMP 常是 8.3 短路径
+    # （C:\Users\RUNNER~1\...），而 nav.py 打印的是 GetFinalPathNameByHandle 的长路径。
+    # 不解析就会出现「输出里明明有路径、断言却匹配不上」的假失败（CI 已实测）。
+    return dest.resolve()
 
 
 def main() -> int:
