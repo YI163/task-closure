@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-STEP-EXECUTOR",
+  "absent": [],
+  "why": "步骤缺 executor → 非零退出并报 T-STEP-EXECUTOR（缺执行者视为计划不完整）"
+}

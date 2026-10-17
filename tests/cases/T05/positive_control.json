@@ -1,0 +1,7 @@
+{
+  "base_skill_id": "SK-20261014-008",
+  "set": {},
+  "why": "阳性对照：该技能有 independent_operation 证据，保持 can_independently 必须通过校验",
+  "expect_error_rule": null,
+  "expect_exit_nonzero": false
+}

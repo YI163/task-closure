@@ -1,0 +1,121 @@
+{
+  "title": "按部门统计第三季度离职数据并做成一页说明",
+  "original_request": "帮我按部门统计一下第三季度离职数据，做成一页说明。",
+  "goal": "产出一页可被 HR 负责人直接使用的离职数据说明",
+  "success_criteria": [
+    "按部门给出离职人数与离职率",
+    "写明统计口径与数据来源",
+    "一页内表达清楚"
+  ],
+  "domain": "work",
+  "task_type": "execution",
+  "planning_depth": "standard",
+  "deadline": "本周内",
+  "assumptions": [
+    "假设数据源是 HR 系统导出的原始表（含重复与格式不一致记录）"
+  ],
+  "unknowns": [
+    {
+      "unknown_id": "UN-001",
+      "description": "离职率的分母口径（期初人数还是平均人数）",
+      "why_it_matters": "口径不同结果差异明显，会被质疑",
+      "how_to_verify": "与 HR 负责人确认"
+    }
+  ],
+  "deliverables": [
+    "一页离职数据说明"
+  ],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "确认统计口径与分母",
+      "purpose": "避免口径不同导致结论不可用",
+      "actions": [
+        "与 HR 负责人确认分母口径",
+        "确认统计范围"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-001"
+        }
+      ],
+      "deliverable": "口径说明（含分母定义）",
+      "completion_criteria": "口径有对方明确确认",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一次沟通估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "用透视表按部门汇总离职人数",
+      "purpose": "拿到按部门的统计结果",
+      "actions": [
+        "按检查表完成透视表操作",
+        "核对汇总数与原始表行数"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-001"
+        }
+      ],
+      "deliverable": "按部门汇总表",
+      "completion_criteria": "各列汇总数与独立计数一致（可核对）",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "含数据清洗时间（用户尚未做过清洗）",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S3",
+      "name": "写成一页说明",
+      "purpose": "让结果可被直接使用",
+      "actions": [
+        "结论前置",
+        "写明口径与局限"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "一页说明",
+      "completion_criteria": "一页内包含结论、口径、局限三部分",
+      "inputs_or_dependencies": [
+        "S2"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一页篇幅估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "与 HR 负责人确认离职率口径",
+    "reason": "口径未确认前的统计结果会被推翻"
+  }
+}

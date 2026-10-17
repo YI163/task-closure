@@ -1,0 +1,60 @@
+[project]
+name = "task-closure"
+version = "0.1.0"
+description = "把模糊任务变成可执行、能跟踪、最终可验收的闭环。带状态的任务工作方式，不是提示词。"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Louis" }]
+keywords = [
+    "task-management",
+    "productivity",
+    "workflow",
+    "ai-agent",
+    "task-tracker",
+    "cli",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business",
+    "Topic :: Utilities",
+]
+
+# 零第三方依赖（纯标准库）。这一行是空的，有意为之。
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/YI163/task-closure"
+Repository = "https://github.com/YI163/task-closure"
+Issues = "https://github.com/YI163/task-closure/issues"
+
+# ── 说明：这不是一个可 pip install 的 Python 包 ──
+# 它是一组「在仓库根目录直接运行」的脚本 + 一份给 AI 的行为契约。
+# 因此不声明 build-system、不声明 packages——避免 `pip install .` 产生一个空包，
+# 让人误以为装了就能用。
+#
+# 正确用法（在仓库根目录）：
+#   python3 scripts/init.py          # 初始化
+#   python3 tests/run_all.py         # 跑全部测试
+#   让 AI 读 skills/task-navigator/SKILL.md
+#
+# ── 为什么这里写 >=3.9 而 README 曾写 3.10+ ──
+# 实测：Python 3.9.6 上 `python3 tests/run_all.py` 全部 3 套通过
+# （数据校验 + 50 条反例 + 157 条场景断言）。
+# 代码里没有 match 语句、没有 isinstance 的 | 联合、没有 zip(strict=)，
+# 22 个脚本全部启用了 `from __future__ import annotations`。
+# 所以首次 CI 的 3.9 那一格如果红了，说明有漏网的地方——那正是 CI 的意义。
+
+[tool.ruff]
+# 只为 CI 之外的人手动检查用，非必需
+line-length = 110
+target-version = "py39"

@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "M-UNVERIFIED",
+  "absent": [],
+  "why": "方法标为 unverified 却没有未验证范围说明"
+}

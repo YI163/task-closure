@@ -602,7 +602,15 @@ def write_entry(payload: dict, directory: Path, reason: str, backup_dest: Path |
         store.save_experience(payload, reason)
         return store.latest_backup()
     dest = seam_backup_dest(directory, backup_dest)
-    backup = store.create_backup(reason, dest=dest)
+    # t19 修复：落点隔离了，源也必须隔离。
+    # 此前只给 dest，导致备份的**内容**还是正式 PROJECT_ROOT 的文件——
+    # 跑一次接缝测试就把用户的真实任务数据复制进了测试目录
+    # （实测：_seam_privacy_run/state/backups/ 里躺着 3181 行真实任务）。
+    # 接缝数据形如 <接缝根>/state/experience，故源根 = state/ 的上一级。
+    seam_root = Path(directory).resolve().parent.parent \
+        if Path(directory).resolve().parent.name == "state" \
+        else Path(directory).resolve().parent
+    backup = store.create_backup(reason, dest=dest, source_root=seam_root)
     store.write_json(Path(directory) / f"{payload['experience_id']}.json", payload)
     return backup
 

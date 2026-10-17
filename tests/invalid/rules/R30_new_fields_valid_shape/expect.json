@@ -1,0 +1,13 @@
+{
+  "kind": "pass",
+  "rule": "",
+  "absent": [
+    "T-PLAN-HISTORY",
+    "T-ACCEPTANCE",
+    "T-VERDICT",
+    "T-VERDICT-TEXT",
+    "E-REVIEW-HISTORY",
+    "E-COUNTEREXAMPLE-RES"
+  ],
+  "why": "schema 1.1 新字段的合法形态必须 exit 0 且不被误报（acceptance 三问/verdict/plan_history/review_history/反例处理记录）"
+}

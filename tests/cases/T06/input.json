@@ -1,0 +1,79 @@
+{
+  "title": "整理季度复盘材料",
+  "original_request": "把季度复盘材料整理一下，周五给我。",
+  "goal": "产出一份可直接用于季度复盘的整理稿",
+  "success_criteria": [
+    "材料结构完整（目标/结果/偏差/下一步）",
+    "数据与来源可核对"
+  ],
+  "domain": "work",
+  "task_type": "writing",
+  "planning_depth": "standard",
+  "deadline": "本周五",
+  "assumptions": [],
+  "unknowns": [],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "收集本季数据与结论",
+      "purpose": "确保材料有数据支撑",
+      "actions": [
+        "导出本季数据",
+        "记录来源"
+      ],
+      "required_skills": [
+        {
+          "free_text": "数据整理"
+        }
+      ],
+      "deliverable": "数据与来源清单",
+      "completion_criteria": "每项数据都能指出来源",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "按导出与核对估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "写成复盘稿",
+      "purpose": "形成可交付材料",
+      "actions": [
+        "按四段结构写",
+        "标注仍未确认的事项"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "复盘稿",
+      "completion_criteria": "四段结构齐全且偏差有解释",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "按一稿估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "收集本季数据",
+    "reason": "没有数据无法开始写作"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "experience_id": "EXP-20260402-002",
+  "title": "对照组：同样的内部内容留在 work 域（不跨域泛化）",
+  "conclusion": "先按内部指标核对口径再对外汇报，可以避免数字被质疑",
+  "domain": "work",
+  "task_type": "research",
+  "tags": ["竞品", "汇报", "口径"],
+  "context": "对照样本：来自公司内部资料，涉及未公开的竞品对比口径；客户名称：XX 集团；该季度毛利率 42.3%",
+  "trigger_conditions": ["需要向经理汇报带内部指标的对比结论时"],
+  "recommended_action": "先从内部数据取数，核对清楚内部指标口径后再写汇报",
+  "reasoning": "内部指标口径与对外披露口径不同，混用会被质疑",
+  "observed_outcome": {
+    "executed": true,
+    "result": "样本：核对内部口径后汇报未被质疑（构造数据）"
+  },
+  "evidence": ["样本证据：一份带内部指标的汇报稿（构造数据，非真实项目记录）"],
+  "source_task_id": "TN-20260101-001",
+  "status": "single_observation",
+  "confidence": {"level": "low", "basis": "构造样本"},
+  "limitations": ["样本数据，不代表真实经验"],
+  "counterexamples": [],
+  "created_at": "2026-04-02T00:00:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "work",
+  "related_skill_ids": ["SK-20260101-001"],
+  "related_method_ids": ["MT-20260101-001"]
+}

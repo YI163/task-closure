@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "S-UPGRADE",
+  "absent": [],
+  "why": "技能虚假升级：只有 guided_practice 却写 can_independently"
+}

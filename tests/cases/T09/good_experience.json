@@ -1,0 +1,22 @@
+{
+  "experience_id": "EXP-20991231-902",
+  "title": "先做小范围试点再推广（待验证假设）",
+  "conclusion": "计划采用「先小范围试点再推广」的做法，但尚未执行，效果待验证",
+  "domain": "work",
+  "task_type": "execution",
+  "tags": ["试点", "待验证"],
+  "context": "计划已定但从未执行，属于待验证假设",
+  "trigger_conditions": ["需要推广一个新流程", "尚无执行数据"],
+  "recommended_action": "若要采用，先记录试点范围与判定标准",
+  "reasoning": "在无执行数据前只能作为假设，不能作为已验证方法",
+  "observed_outcome": {"executed": false, "result": "未执行"},
+  "evidence": [],
+  "source_task_id": "{TASK_ID}",
+  "status": "to_verify",
+  "confidence": {"level": "low", "basis": "仅来自计划推演，无执行结果"},
+  "limitations": ["从未执行，无实际效果数据"],
+  "counterexamples": [],
+  "created_at": "2026-10-15T00:20:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "work"
+}

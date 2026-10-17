@@ -1,0 +1,7 @@
+{
+  "base_skill_id": "SK-20261014-001",
+  "set": {"status": "can_independently"},
+  "why": "反例：把仅有 self_report（在指导下做过一次）的技能直接提升为「可独立完成」",
+  "expect_error_rule": "S-UPGRADE",
+  "expect_exit_nonzero": true
+}

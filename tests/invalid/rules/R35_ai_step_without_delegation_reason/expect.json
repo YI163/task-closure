@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-STEP-DELEGATION",
+  "absent": [],
+  "why": "executor=ai 但缺 delegation_reason → 非零退出（AI 代做必须有理由）"
+}

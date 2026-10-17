@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-CLOSED-AT",
+  "absent": [],
+  "why": "任务标为 completed 却缺 closed_at"
+}

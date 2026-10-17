@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-USAGE-REF",
+  "absent": [],
+  "why": "experiences_used 缺 why_applicable → 应非零退出：说了用哪条经验却不说什么适用，等于没留痕"
+}

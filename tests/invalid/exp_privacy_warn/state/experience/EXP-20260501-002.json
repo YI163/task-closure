@@ -1,0 +1,43 @@
+{
+  "experience_id": "EXP-20260501-002",
+  "title": "样本：公开资料整理（general 域，任何字段都不应命中）",
+  "conclusion": "先把公开资料整理成三栏对比（样本数据）",
+  "domain": "work",
+  "task_type": "research",
+  "tags": [
+    "竞品",
+    "汇报"
+  ],
+  "context": "样本：只用公开可核实的资料做整理，不含任何受限信息",
+  "trigger_conditions": [
+    "需要整理公开资料做对比时"
+  ],
+  "recommended_action": "先收集公开可核实的资料，再整理成对比表",
+  "reasoning": "公开资料可复核，结论更容易被接受",
+  "observed_outcome": {
+    "executed": true,
+    "result": "样本观察结果（构造数据，非真实项目经验）"
+  },
+  "evidence": [
+    "EXP-20260501-002 样本证据：一份汇报稿（构造数据）"
+  ],
+  "source_task_id": "TN-20260101-001",
+  "status": "single_observation",
+  "confidence": {
+    "level": "low",
+    "basis": "构造样本"
+  },
+  "limitations": [
+    "样本数据，不代表真实经验"
+  ],
+  "counterexamples": [],
+  "created_at": "2026-01-01T00:00:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general",
+  "related_skill_ids": [
+    "SK-20260101-001"
+  ],
+  "related_method_ids": [
+    "MT-20260101-001"
+  ]
+}

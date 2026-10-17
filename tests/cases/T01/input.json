@@ -1,0 +1,17 @@
+{
+  "title": "出门前记得带雨伞",
+  "original_request": "提醒我明天出门前带雨伞。",
+  "goal": "明天出门时把雨伞带在身边",
+  "success_criteria": ["出门时雨伞已在手边（放入包中或拿在手上）"],
+  "domain": "life",
+  "task_type": "admin",
+  "planning_depth": "light",
+  "assumptions": ["假设明天确实需要带伞（天气可能变化，未核实）"],
+  "unknowns": [],
+  "deliverables": [],
+  "plan": [
+    { "executor": "user", "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则", "name": "今晚把伞放到门口", "actions": ["把折叠伞放到玄关鞋柜上"], "status": "pending"},
+    { "executor": "user", "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则", "name": "出门前看一眼玄关", "actions": ["出门前确认伞在玄关；若不在则取一把"], "status": "pending"}
+  ],
+  "next_best_action": {"action": "今晚把伞放到门口", "reason": "轻量任务，一步到位即可，不需要背景研究"}
+}

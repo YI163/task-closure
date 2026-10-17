@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-USAGE-REF",
+  "absent": [],
+  "why": "experiences_used 引用了不存在的 experience_id → 应非零退出（核审 t25 的 N6）"
+}

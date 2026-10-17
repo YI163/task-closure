@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-NBA",
+  "absent": [],
+  "why": "next_best_action 的 action/reason 为空"
+}

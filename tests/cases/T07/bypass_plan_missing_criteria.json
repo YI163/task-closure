@@ -1,0 +1,43 @@
+{
+  "what": "负向实验：替换计划为缺少 completion_criteria 的步骤（试探 change 是否校验步骤必填字段）",
+  "why": "验证重规划写入路径是否与 schema 的 step_required_fields 一致",
+  "impact": "若被接受，则 tasks.json 会进入 validate.py 判定为 T-STEP-REQ 违规的状态",
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "只有名称的步骤 A",
+      "actions": [],
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ],
+      "time_estimate": "约 10 分钟",
+      "estimate_basis": "按夹具的单步操作估算"
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "只有名称的步骤 B",
+      "actions": [],
+      "inputs_or_dependencies": [
+        "不适用：S2 为测试夹具步骤，无前置依赖"
+      ],
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ],
+      "time_estimate": "约 10 分钟",
+      "estimate_basis": "按夹具的单步操作估算"
+    }
+  ]
+}

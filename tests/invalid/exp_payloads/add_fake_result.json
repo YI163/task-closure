@@ -1,0 +1,27 @@
+{
+  "experience_id": "EXP-20260301-003",
+  "title": "反例：计划从未执行，却写成「显著提升效率」",
+  "conclusion": "用三个维度做竞品对比，显著提升效率",
+  "domain": "work",
+  "task_type": "research",
+  "tags": ["竞品", "效率"],
+  "context": "反例样本：未执行却写结果性结论（T09）",
+  "trigger_conditions": ["需要对比多家竞品时"],
+  "recommended_action": "先定三个维度再补充细节",
+  "reasoning": "看起来能省时间",
+  "observed_outcome": {
+    "executed": false,
+    "result": "计划从未执行（样本）"
+  },
+  "evidence": [],
+  "source_task_id": "TN-20260101-001",
+  "status": "to_verify",
+  "confidence": {"level": "low", "basis": "无实际结果"},
+  "limitations": ["尚未执行"],
+  "counterexamples": [],
+  "created_at": "2026-03-01T00:00:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general",
+  "related_skill_ids": ["SK-20260101-001"],
+  "related_method_ids": ["MT-20260101-001"]
+}

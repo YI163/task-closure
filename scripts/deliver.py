@@ -27,7 +27,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import store  # noqa: E402
 
-DESKTOP = Path.home() / "Desktop" / "任务交付"
+# 交付目录**不再写死**：Windows 桌面可能被 OneDrive 重定向；
+# 也有人不用桌面。探测逻辑在 store.delivery_dir()，
+# 可用环境变量 NAV_DELIVERY_DIR 覆盖。
+DESKTOP = store.delivery_dir()
 PROJECT = store.PROJECT_ROOT
 DELIVERABLES = PROJECT / "outputs" / "deliverables"
 
@@ -122,6 +125,11 @@ def naming_ok(name: str) -> tuple[bool, str]:
 def check(task_id: str) -> int:
     data = store.load_tasks()
     task = store.find_task(data["tasks"], task_id)
+    # 规划深度决定「要几项检查」——light 档不该被全套流程压住。
+    # 外部审查者指出：「润色一条招聘回复」若也要建档、拆任务、出行清单、画流程图，
+    # 管理成本就超过任务本身。SKILL.md §B 早就分了 light/standard/deep，
+    # 但 deliver.py 此前完全不看 planning_depth，导致三档走同一套检查。
+    depth = str(task.get("planning_depth") or "").lower()
     problems: list[str] = []
     notes: list[str] = []
 
@@ -164,6 +172,10 @@ def check(task_id: str) -> int:
                 ascii_flow.append(f.name)
         if rendered:
             print(f"  ✅ 存在流程图（渲染版：{'、'.join(rendered[:3])}）")
+        elif depth == "light":
+            # light 档按 SKILL.md §B：「直接行动清单，不写背景研究，不做正式汇报」。
+            # 流程图属于正式产出，故不强制；但不算通过——明确说明是「按档位豁免」。
+            print("  ⬜ 未要求流程图（light 档：直接行动清单，不做正式汇报）")
         else:
             problems.append(
                 "缺少流程图（渲染版）：spec/00 阶段1-6 与 spec/01 §5 要求必须给。"
@@ -276,20 +288,17 @@ def check(task_id: str) -> int:
                         "用户要求同一内容只留一种（流程图明确要求只留 PDF）"
                     )
 
-    # 合并本检测（SKILL.md §0 第 11 条）——**内容级**，不靠文件名
-    # 为什么不能只查文件名（实测漏过）：曾造一个「完整材料合集.md」测试样本，
-    # 而检测只查桌面、且只匹配文件名关键词 → 漏掉了。
-    # 判据：一个文件里出现**多个一级标题**（# ），说明它是把几份文档拼在一起的。
-    if task_dir.is_dir():
-        for f in list(task_dir.glob("*.md")) + list(task_dir.glob("*.html")):
-            body = f.read_text(encoding="utf-8", errors="ignore")
     # 覆盖对照检查：来源里写明的清单，产出里是否都有
     # 背景：用户问「有没有什么能让你做得更好、更准确的办法」——
     # 实测最有效的是「换个角度并排看」，但此前一直依赖用户或审查员来做。
     # 本项把它机械化：没有跑过 coverage_check 或跑出缺口，就不许交付。
     cc_dir = store.PROJECT_ROOT / "state" / "coverage_checks"
     cc_file = cc_dir / f"{task_id}.json"
-    if not cc_file.is_file():
+    if depth == "light" and not cc_file.is_file():
+        # light 档豁免：来源清单通常只有一两项，为此多跑一条命令是净成本。
+        # 注意：若用户**已经跑过**覆盖对照，下面照样校验它的结果——只是不强制新增。
+        print("  ⬜ 未要求覆盖对照（light 档）")
+    elif not cc_file.is_file():
         problems.append(
             "没有跑过覆盖对照：请执行 "
             f"`python3 scripts/coverage_check.py --task {task_id} --source \"<来源里写明的清单>\"`"

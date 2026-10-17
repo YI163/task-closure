@@ -1,0 +1,39 @@
+{
+  "title": "给家里换一个门锁",
+  "original_request": "家里的门锁坏了，帮我安排换一个。",
+  "goal": "换好门锁并确认能正常使用",
+  "success_criteria": [
+    "门锁安装完成且能正常开关锁",
+    "有安装方联系方式与保修凭据"
+  ],
+  "domain": "life",
+  "task_type": "execution",
+  "planning_depth": "light",
+  "assumptions": [],
+  "unknowns": [],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "name": "联系安装师傅上门",
+      "actions": [
+        "找到 2 个安装师傅联系方式并比价",
+        "约好上门时间"
+      ],
+      "status": "pending"
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "name": "安装后当场测试开关锁",
+      "actions": [
+        "当场开关锁 3 次并测试反锁功能"
+      ],
+      "status": "pending"
+    }
+  ],
+  "next_best_action": {
+    "action": "联系安装师傅",
+    "reason": "轻量执行类任务"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "methods": [
+    {
+      "method_id": "MT-20260101-001",
+      "name": "反例先行：先写违规样本，再写校验规则",
+      "applicable_task_types": [
+        "execution"
+      ],
+      "problem_solved": "校验器可能只对合法数据静默通过，无法证明规则生效",
+      "expected_outcome": "每条规则都有一个能让校验器非零退出的样本",
+      "preconditions": [
+        "已有明确的数据契约（schema.json）"
+      ],
+      "not_applicable_when": [
+        "契约本身仍在频繁变动时，先稳定契约再写反例"
+      ],
+      "inputs": [
+        "schema 中的规则清单"
+      ],
+      "outputs": [
+        "tests/invalid/ 下的违规样本与回归脚本"
+      ],
+      "steps": [
+        "列出规则",
+        "为每条规则构造一个最小违规样本",
+        "断言校验器非零退出且报出对应规则 id"
+      ],
+      "checkpoints": [
+        "每个样本只注入一处违规；基线样本必须通过"
+      ],
+      "failure_handling": [
+        "若样本未被检出，先怀疑规则没实现，而不是删掉样本"
+      ],
+      "source": {
+        "kind": "own_experience",
+        "citation": "本项目 reports/STORAGE_VERIFICATION.md 的实施记录",
+        "retrieved_at": "2026-01-01T00:00:00+08:00"
+      },
+      "verification_status": "unverified",
+      "limitations": [
+        "未验证范围：样本只覆盖单团队执行，未覆盖跨团队协作与合规审查场景"
+      ]
+    }
+  ],
+  "last_updated": "2026-01-01T00:00:00+08:00"
+}

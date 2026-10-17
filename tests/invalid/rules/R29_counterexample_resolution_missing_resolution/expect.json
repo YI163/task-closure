@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "E-COUNTEREXAMPLE-RES",
+  "absent": [],
+  "why": "counterexample_resolutions 记录缺 resolution → 失败"
+}

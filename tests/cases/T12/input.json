@@ -1,0 +1,81 @@
+{
+  "title": "整理客户 ZX-9 的续约条款说明",
+  "original_request": "整理客户 ZX-9 的未公开定价与续约条款，做成内部说明。",
+  "goal": "产出内部可用的续约条款说明",
+  "success_criteria": [
+    "条款与定价整理完整且与原件一致",
+    "说明仅用于内部，不外传"
+  ],
+  "domain": "work",
+  "task_type": "writing",
+  "planning_depth": "standard",
+  "constraints": [
+    "客户名称、未公开定价与条款属公司机密：不得外传、不得写入通用经验库原文"
+  ],
+  "assumptions": [],
+  "unknowns": [],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "核对条款与定价原件",
+      "purpose": "保证说明与原件一致",
+      "actions": [
+        "逐条核对",
+        "记录差异"
+      ],
+      "required_skills": [
+        {
+          "free_text": "条款阅读"
+        }
+      ],
+      "deliverable": "核对记录",
+      "completion_criteria": "每条差异都有出处",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "按条款条目数估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "写成内部说明",
+      "purpose": "形成可交付说明",
+      "actions": [
+        "结论前置",
+        "标注机密等级与使用范围"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "内部说明",
+      "completion_criteria": "含机密等级标注与使用范围",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一页说明估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "核对条款原件",
+    "reason": "条款核对是写作前置"
+  }
+}

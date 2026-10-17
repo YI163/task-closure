@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-PLAN-HISTORY",
+  "absent": [],
+  "why": "plan_history 归档项缺 plan → 失败"
+}

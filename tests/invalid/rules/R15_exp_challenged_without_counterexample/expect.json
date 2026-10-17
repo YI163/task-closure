@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "E-COUNTEREXAMPLE",
+  "absent": [],
+  "why": "标为被反例挑战却没有记录反例"
+}

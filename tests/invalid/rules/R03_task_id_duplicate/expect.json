@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-ID-DUP",
+  "absent": [],
+  "why": "task_id 不唯一：复制同一任务"
+}

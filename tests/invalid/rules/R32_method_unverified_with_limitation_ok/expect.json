@@ -1,0 +1,9 @@
+{
+  "kind": "pass",
+  "rule": "",
+  "absent": [
+    "M-UNVERIFIED",
+    "M-FILE"
+  ],
+  "why": "unverified 但写明未验证范围的合法方法 → exit 0 且不得误报 M-UNVERIFIED"
+}

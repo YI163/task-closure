@@ -1,0 +1,22 @@
+{
+  "experience_id": "EXP-20991231-901",
+  "title": "先做小范围试点再推广",
+  "conclusion": "此方法显著提升效率，应当作为通用做法",
+  "domain": "work",
+  "task_type": "execution",
+  "tags": ["试点"],
+  "context": "计划从未执行（executed=false）",
+  "trigger_conditions": ["需要推广一个新流程"],
+  "recommended_action": "先小范围试点再全面推广",
+  "reasoning": "理论上可以提前发现问题",
+  "observed_outcome": {"executed": false, "result": "计划从未执行，没有任何结果"},
+  "evidence": [],
+  "source_task_id": "{TASK_ID}",
+  "status": "single_observation",
+  "confidence": {"level": "high", "basis": "主观感觉"},
+  "limitations": [],
+  "counterexamples": [],
+  "created_at": "2026-10-15T00:20:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "work"
+}

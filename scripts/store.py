@@ -49,6 +49,81 @@ class StoreError(RuntimeError):
 
 # ---------------------------------------------------------------- 时间
 
+# ---------------------------------------------------------------- 跨平台路径
+#
+# 为什么集中在这里：此前 Chrome 路径与交付目录**各自写死在 4 个脚本里**，
+# 外部审查者据此指出「Windows 上直接不可用」——
+#   CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+#   DESKTOP = Path.home() / "Desktop" / "任务交付"
+# 这两行在 Windows 上分别指向不存在的路径。
+# 集中一处之后，改一处即可，不会再漏改。
+
+CHROME_CANDIDATES = (
+    # macOS
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    # Windows
+    r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+    r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+    # Linux
+    "/usr/bin/google-chrome",
+    "/usr/bin/google-chrome-stable",
+    "/usr/bin/chromium",
+    "/usr/bin/chromium-browser",
+    "/snap/bin/chromium",
+)
+
+
+def find_chrome(explicit: "Path | str | None" = None) -> Path | None:
+    """定位可用的 Chrome/Chromium/Edge。找不到返回 None（由调用方决定怎么报错）。
+
+    优先级：显式参数 > 环境变量 CHROME_PATH > 各平台常见路径。
+    为什么要返回 None 而不是抛错：出图是可选能力（核心任务是记录与校验），
+    不该因为没装浏览器就让整个脚本崩掉。调用方应给出可读的提示。
+    """
+    if explicit is not None:
+        candidate = Path(explicit).expanduser()
+        return candidate if candidate.is_file() else None
+    env = os.environ.get("CHROME_PATH")
+    if env:
+        candidate = Path(env).expanduser()
+        if candidate.is_file():
+            return candidate
+    for raw in CHROME_CANDIDATES:
+        candidate = Path(raw)
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def chrome_help_text() -> str:
+    """找不到 Chrome 时给用户的提示。要具体，不能只说「请安装 Chrome」。"""
+    return (
+        "找不到可用的 Chrome/Chromium/Edge。出图功能需要它（核心的记录与校验功能不需要）。\n"
+        "三种解决办法（任选其一）：\n"
+        "  1. 安装 Google Chrome\n"
+        "  2. 设置环境变量 CHROME_PATH 指向你的浏览器可执行文件，例如：\n"
+        "       macOS/Linux:  export CHROME_PATH=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\"\n"
+        "       PowerShell:   $env:CHROME_PATH=\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"\n"
+        "  3. 不用出图功能（其余脚本不依赖它）"
+    )
+
+
+def delivery_dir() -> Path:
+    """交付目录。默认 ~/Desktop/任务交付；可用环境变量 NAV_DELIVERY_DIR 覆盖。
+
+    为什么要可配置：写死 `~/Desktop/任务交付` 在三种常见情况下会出问题——
+      ① Windows 桌面可能被 OneDrive 重定向（实际在 ~/OneDrive/Desktop）
+      ② 不用桌面的人（比如把所有东西放 ~/Documents）
+      ③ 非中文环境可能不希望目录名带中文
+    """
+    env = os.environ.get("NAV_DELIVERY_DIR")
+    if env:
+        return Path(env).expanduser()
+    return Path.home() / "Desktop" / "任务交付"
+
+
 def now_iso() -> str:
     """带本地时区偏移的 ISO8601 时间戳，精确到秒。"""
     return datetime.now().astimezone().replace(microsecond=0).isoformat()
@@ -143,14 +218,31 @@ def find_project_root() -> Path:
 
 # ---------------------------------------------------------------- 备份
 
-def list_backupable_files() -> list[Path]:
-    """列出需要纳入备份的文件（不含 backups 自身，避免递归）。"""
+def list_backupable_files(root: "Path | str | None" = None) -> list[Path]:
+    """列出需要纳入备份的文件（不含 backups 自身，避免递归）。
+
+    root（t19 修复）：备份的**源根目录**。缺省为项目根（正式路径）。
+    接缝模式下必须传接缝自己的根——否则会出现这个问题：
+      `create_backup(dest=接缝目录)` 只改**落点**，源仍是正式 PROJECT_ROOT，
+      于是跑一次接缝测试，就把**用户的真实任务数据**复制进了测试目录。
+      实测：tests/invalid/_seam_privacy_run/state/backups/ 里躺着 3181 行真实任务。
+    """
+    base = Path(root).resolve() if root is not None else PROJECT_ROOT
+    state = base / "state"
     files: list[Path] = []
-    for candidate in (TASKS_PATH, SKILLS_PATH, SCHEMA_PATH, METHODS_PATH, DECISIONS_PATH, EVENTS_PATH):
+    for candidate in (
+        state / "tasks.json",
+        state / "user_skills.json",
+        state / "schema.json",
+        base / "methods" / "index.json",
+        base / "decisions.md",
+        state / "tasks.jsonl",
+    ):
         if candidate.exists():
             files.append(candidate)
-    if EXPERIENCE_DIR.exists():
-        files.extend(sorted(p for p in EXPERIENCE_DIR.glob("*.json")))
+    experience = state / "experience"
+    if experience.is_dir():
+        files.extend(sorted(p for p in experience.glob("*.json")))
     return files
 
 
@@ -191,12 +283,15 @@ def backup_dir(dest: "Path | str | None" = None) -> Path:
     return BACKUP_DIR
 
 
-def create_backup(reason: str, dest: "Path | str | None" = None) -> Path:
+def create_backup(reason: str, dest: "Path | str | None" = None,
+                  source_root: "Path | str | None" = None) -> Path:
     """创建全量快照 + manifest。返回备份目录。所有写操作前调用。
 
     dest（t18）：自定义落点（测试接缝用）；缺省仍是正式 state/backups。
+    source_root（t19）：自定义**快照源根**。缺省为项目根。
+      接缝模式必须同时给 dest 与 source_root，否则「落点隔离了、内容没隔离」——
+      会把用户真实数据备份进测试目录（实测事故，见 list_backupable_files 的说明）。
     落点无法创建时**明确报错**，绝不静默回落到正式目录（宁可失败，不要污染冻结判据）。
-    注意：快照的**内容**仍是 list_backupable_files() 定义的项目文件；本参数只改落点。
     """
     find_project_root()
     directory = backup_dir(dest)
@@ -216,8 +311,9 @@ def create_backup(reason: str, dest: "Path | str | None" = None) -> Path:
     target.mkdir(parents=True, exist_ok=False)
 
     entries = []
-    for source in list_backupable_files():
-        relative = source.relative_to(PROJECT_ROOT)
+    base = Path(source_root).resolve() if source_root is not None else PROJECT_ROOT
+    for source in list_backupable_files(base):
+        relative = source.relative_to(base)
         destination = target / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)

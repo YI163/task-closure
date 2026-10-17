@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import store  # noqa: E402
 
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+# 浏览器路径改为运行时探测（见 store.find_chrome）
 HERE = Path(__file__).resolve().parent
 
 
@@ -38,7 +38,10 @@ def load_md2html():
     return mod
 
 
-DESKTOP = Path.home() / "Desktop" / "任务交付"
+# 交付目录**不再写死**：Windows 桌面可能被 OneDrive 重定向；
+# 也有人不用桌面。探测逻辑在 store.delivery_dir()，
+# 可用环境变量 NAV_DELIVERY_DIR 覆盖。
+DESKTOP = store.delivery_dir()
 # 同一内容的多种格式：保留优先级（前面的优先保留，其余移出视线）
 FORMAT_PRIORITY = [".pdf", ".html", ".png", ".jpg"]
 

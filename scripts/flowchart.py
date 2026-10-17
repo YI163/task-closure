@@ -36,7 +36,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import store  # noqa: E402
 
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+# 浏览器路径**不再写死**：Windows / Linux 上 macOS 路径根本不存在。
+# 探测逻辑集中在 store.find_chrome()，可用环境变量 CHROME_PATH 覆盖。
+# 实测教训：外部审查者据此指出「Windows 上直接不可用」。
 
 CSS = """
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -157,9 +159,10 @@ def build_html(spec: dict) -> str:
 
 def render(html_path: Path, png_path: Path, pdf_path: Path | None,
            width: int, height: int) -> tuple[bool, str]:
-    if not Path(CHROME).is_file():
-        return False, f"找不到 Chrome：{CHROME}"
-    base = [CHROME, "--headless", "--disable-gpu", "--hide-scrollbars",
+    chrome = store.find_chrome()
+    if chrome is None:
+        return False, store.chrome_help_text()
+    base = [str(chrome), "--headless", "--disable-gpu", "--hide-scrollbars",
             "--force-device-scale-factor=2", "--default-background-color=FFFFFFFF"]
     r = subprocess.run(base + [f"--screenshot={png_path}",
                                f"--window-size={width},{height}", str(html_path)],

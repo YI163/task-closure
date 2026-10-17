@@ -33,11 +33,21 @@
 ## 二、第一件事：确认它能不能跑
 
 ```bash
-python3 scripts/init.py            # 建空 state/
-python3 scripts/validate.py --all  # 期望：错误 0 项，结论「通过」
+python3 nav.py init     # 建空 state/（不覆盖已有数据）
+python3 nav.py test     # 数据校验 + 反例 + 场景 + 单测，期望「全部通过」
 ```
 
-**如果 `validate` 报错**，多半是 `state/schema.json` 被删了——那是数据契约，必须保留。
+**如果 `test` 报错**，先看是哪一套失败：
+- 数据校验 → 多半是 `state/schema.json` 被删了（那是数据契约，必须保留）
+- 其余 → 把输出发出来
+
+**Windows（PowerShell）**：把 `python3` 换成 `python`，其余相同。
+路径类命令的两种写法：
+
+| 用途 | macOS / Linux | Windows PowerShell |
+|---|---|---|
+| 指定浏览器 | `export CHROME_PATH="/Applications/…/Google Chrome"` | `$env:CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"` |
+| 改交付目录 | `export NAV_DELIVERY_DIR=~/Documents/交付` | `$env:NAV_DELIVERY_DIR="$HOME\Documents\交付"` |
 
 ---
 

@@ -1,0 +1,23 @@
+{
+  "experience_id": "EXP-20991231-803",
+  "title": "旧的报销流程经验（已过复核时间）",
+  "conclusion": "报销走纸质单据最快",
+  "domain": "work",
+  "task_type": "admin",
+  "tags": ["过时样本"],
+  "context": "公司已上线线上报销系统，环境与记录时不同",
+  "trigger_conditions": ["需要提交报销"],
+  "recommended_action": "使用纸质单据提交",
+  "reasoning": "当时线上系统尚未上线",
+  "observed_outcome": {"executed": true, "result": "当时纸质流程 2 天到账"},
+  "evidence": ["旧流程的两次报销记录"],
+  "source_task_id": "{TASK_ID}",
+  "status": "single_observation",
+  "confidence": {"level": "low", "basis": "环境已变化"},
+  "limitations": ["线上系统上线后该做法可能已失效"],
+  "counterexamples": [],
+  "created_at": "2025-06-01T00:00:00+08:00",
+  "last_reviewed_at": "2025-06-01T00:00:00+08:00",
+  "review_after": "2026-01-01T00:00:00+08:00",
+  "privacy_scope": "work"
+}

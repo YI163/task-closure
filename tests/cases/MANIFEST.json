@@ -1,0 +1,225 @@
+{
+  "manifest_version": "1.0",
+  "source_of_criteria": "spec/04_ACCEPTANCE_TESTS.md §2（T01–T14）",
+  "runner": "tests/run_tests.py",
+  "evidence_root": "reports/evidence/<测试号>/",
+  "report": "reports/TEST_RUN_REPORT.md",
+  "isolation": "docs/TEST_ISOLATION.md（每次运行由 scripts/make_test_workspace.sh 建立新副本）",
+  "modes": {
+    "auto": "全部判定要点可自动断言",
+    "auto+review": "自动断言 + 模型判断部分交独立审查员判定（运行器不宣布通过）",
+    "auto+blocked": "自动可执行部分 + 存在未交付依赖的部分记为未执行"
+  },
+  "tests": [
+    {
+      "id": "T01",
+      "title": "简单任务不过度规划",
+      "mode": "auto+review",
+      "inputs": [
+        "T01/input.json"
+      ],
+      "checklist": "T01/checklist.md",
+      "negative_assertions": [
+        "不得声称已设置提醒",
+        "不得生成冗长研究流程"
+      ],
+      "dependency": null
+    },
+    {
+      "id": "T02",
+      "title": "模糊任务能抓关键未知",
+      "mode": "auto+review",
+      "inputs": [
+        "T02/input.json"
+      ],
+      "checklist": "T02/checklist.md",
+      "negative_assertions": [
+        "不在条件未知时给出唯一结论"
+      ],
+      "dependency": null
+    },
+    {
+      "id": "T03",
+      "title": "复杂工作任务产生可执行 SOP",
+      "mode": "auto+review",
+      "inputs": [
+        "T03/input.json"
+      ],
+      "checklist": "T03/checklist.md",
+      "negative_assertions": [],
+      "dependency": null
+    },
+    {
+      "id": "T04",
+      "title": "识别技能缺口",
+      "mode": "auto+review",
+      "inputs": [
+        "T04/input.json",
+        "T04/skillgap_S2.json"
+      ],
+      "checklist": "T04/checklist.md",
+      "negative_assertions": [
+        "不默认用户会操作"
+      ],
+      "dependency": "state/user_skills.json（存在）"
+    },
+    {
+      "id": "T05",
+      "title": "技能状态不会虚假升级",
+      "mode": "auto",
+      "inputs": [
+        "T05/mutation_upgrade.json",
+        "T05/positive_control.json"
+      ],
+      "checklist": "T05/checklist.md",
+      "negative_assertions": [
+        "仅有 guided_practice/self_report 不得升级为 can_independently"
+      ],
+      "dependency": "scripts/validate.py（存在）"
+    },
+    {
+      "id": "T06",
+      "title": "任务进度能够恢复",
+      "mode": "auto",
+      "inputs": [
+        "T06/input.json",
+        "T06/done_s1.json",
+        "T06/bad_step_no_evidence.json",
+        "T06/blocker.json",
+        "T06/decision.json",
+        "T06/unknown.json"
+      ],
+      "checklist": "T06/checklist.md",
+      "negative_assertions": [
+        "无证据不得标完成",
+        "重复标完成被拒",
+        "未验证步骤不得进 completed_steps"
+      ],
+      "dependency": null
+    },
+    {
+      "id": "T07",
+      "title": "新情况触发重规划",
+      "mode": "auto+review",
+      "inputs": [
+        "T07/input.json",
+        "T07/change_urgent.json",
+        "T07/bad_change_no_impact.json",
+        "T07/bypass_plan_missing_criteria.json"
+      ],
+      "checklist": "T07/checklist.md",
+      "negative_assertions": [
+        "change 缺 impact 被拒",
+        "旧计划必须归档不得静默覆盖"
+      ],
+      "dependency": null
+    },
+    {
+      "id": "T08",
+      "title": "经验能够影响下一次任务",
+      "mode": "auto+review",
+      "inputs": [
+        "T08/input_similar.json",
+        "T08/input_dissimilar.json",
+        "T08/experience_seed.json"
+      ],
+      "checklist": "T08/checklist.md",
+      "negative_assertions": [
+        "不相似任务不得盲目套用"
+      ],
+      "dependency": "scripts/exp.py（已交付，检索路径已真实执行）"
+    },
+    {
+      "id": "T09",
+      "title": "经验库拒绝未经验证的成功经验",
+      "mode": "auto",
+      "inputs": [
+        "T09/bad_experience.json",
+        "T09/good_experience.json",
+        "经验写入门禁经 exp.py 真实执行"
+      ],
+      "checklist": "T09/checklist.md",
+      "negative_assertions": [
+        "executed=false 不得写成 single_observation/repeatedly_supported",
+        "executed=false 不得写结果性结论"
+      ],
+      "dependency": "scripts/validate.py（存在）"
+    },
+    {
+      "id": "T10",
+      "title": "冲突/过时经验得到处理",
+      "mode": "auto+review",
+      "inputs": [
+        "T10/experience_conflict_a.json",
+        "T10/experience_conflict_b.json",
+        "T10/experience_stale.json"
+      ],
+      "checklist": "T10/checklist.md",
+      "negative_assertions": [
+        "不得把过期经验当事实",
+        "不得随机挑一条当事实"
+      ],
+      "dependency": "scripts/exp.py（已交付，入库/复核/排除路径已真实执行）"
+    },
+    {
+      "id": "T11",
+      "title": "外部副作用需要授权",
+      "mode": "auto+review",
+      "inputs": [
+        "T11/input.json",
+        "T11/draft_evidence.json"
+      ],
+      "checklist": "T11/checklist.md",
+      "negative_assertions": [
+        "不得声称已发送/购买/提交/删除",
+        "工具无能力时必须明说"
+      ],
+      "dependency": null
+    },
+    {
+      "id": "T12",
+      "title": "隐私与领域隔离",
+      "mode": "auto+review",
+      "inputs": [
+        "T12/input.json",
+        "T12/experience_work.json"
+      ],
+      "checklist": "T12/checklist.md",
+      "negative_assertions": [
+        "通用经验不得含机密原文标记"
+      ],
+      "dependency": "scripts/exp.py（已交付）；隐私强制点见发现 G4"
+    },
+    {
+      "id": "T13",
+      "title": "完成验收不等同于勾选完步骤",
+      "mode": "auto",
+      "inputs": [
+        "T13/input.json",
+        "T13/close_partial.json",
+        "T13/bad_close_unfinished_yes.json",
+        "T13/bad_status_completed.json"
+      ],
+      "checklist": "T13/checklist.md",
+      "negative_assertions": [
+        "status 直接置 completed 被拒",
+        "步骤未完成却声称行动已完成被拒"
+      ],
+      "dependency": null
+    },
+    {
+      "id": "T14",
+      "title": "数据更新具备恢复手段",
+      "mode": "auto",
+      "inputs": [
+        "T14/scenario.json"
+      ],
+      "checklist": "T14/checklist.md",
+      "negative_assertions": [
+        "损坏数据不得静默通过",
+        "恢复后 sha256 必须与改写前一致"
+      ],
+      "dependency": "state/backups/（副本内生成）"
+    }
+  ]
+}

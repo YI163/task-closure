@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "S-XREF-TASK",
+  "absent": [],
+  "why": "技能证据指向不存在的任务（悬空引用）"
+}

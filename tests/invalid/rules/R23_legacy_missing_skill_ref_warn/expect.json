@@ -1,0 +1,6 @@
+{
+  "kind": "pass_with_warning",
+  "rule": "T-STEP-SKILL-LEGACY",
+  "absent": [],
+  "why": "1.0 字段名（仅 free_text、缺 skill_ref）→ exit 0 但必须报警告并列出迁移清单"
+}

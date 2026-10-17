@@ -1,0 +1,76 @@
+{
+  "title": "比较两款记账 App 并做选择",
+  "original_request": "帮我比较两款记账 App，选一个用。",
+  "goal": "选定一款记账 App 并说明理由",
+  "success_criteria": [
+    "给出选择与适用条件",
+    "至少两个可核实来源"
+  ],
+  "domain": "life",
+  "task_type": "decision",
+  "planning_depth": "standard",
+  "assumptions": [],
+  "unknowns": [],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "建立比较维度",
+      "purpose": "让比较可执行",
+      "actions": [
+        "列出维度"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-003"
+        }
+      ],
+      "deliverable": "维度表",
+      "completion_criteria": "维度可判定",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "0.5 天",
+      "estimate_basis": "按维度设计估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "给出选择",
+      "purpose": "形成结论",
+      "actions": [
+        "按维度比较"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-003"
+        }
+      ],
+      "deliverable": "结论",
+      "completion_criteria": "写明适用条件",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "0.5 天",
+      "estimate_basis": "按两款比较估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "建立比较维度",
+    "reason": "无维度无法比较"
+  }
+}

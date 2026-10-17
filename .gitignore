@@ -40,3 +40,21 @@ outputs/数据导出-*
 # outputs/deliverables/   交付物——曾经误排除过，不要再犯
 docs/images/*.html
 docs/images/*.pdf
+
+# ── 公开仓库额外排除：你自己的数据与测试生成物 ──
+# 这个仓库是「工具」，不是「某人的使用记录」。你 clone 之后产生的数据不必提交；
+# 想留档就 fork 成私有仓库，或自己加回来。
+state/tasks.json
+state/tasks.jsonl
+state/experience/
+state/lessons/
+state/flowcharts/
+state/coverage_checks/
+state/self_reviews/
+state/user_skills.json.bak-*
+outputs/
+reports/evidence/
+reports/TEST_RUN_REPORT.md
+
+# 注意：state/schema.json 与 state/user_skills.json **不排除**——
+# 前者是数据契约（删了脚本全崩），后者是脱敏示例档案（让你一开始跑得起来）。

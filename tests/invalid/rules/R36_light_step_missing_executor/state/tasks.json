@@ -1,0 +1,57 @@
+{
+  "tasks": [
+    {
+      "task_id": "TN-20260101-001",
+      "title": "基线样本：证明反例失败来自注入的违规",
+      "original_request": "（tests/invalid/ 基线样本，不是真实用户任务）",
+      "domain": "work",
+      "task_type": "execution",
+      "goal": "提供一个字段完整的任务记录，作为全部反例的对照",
+      "requester_or_beneficiary": null,
+      "success_criteria": [
+        "validate.py --all 对该样本 exit 0"
+      ],
+      "deadline": null,
+      "constraints": [],
+      "assumptions": [
+        "仅用于校验器回归测试"
+      ],
+      "unknowns": [],
+      "planning_depth": "light",
+      "plan": [
+        {
+          "step_id": "S1",
+          "name": "只写了动作与依据，却没有执行者",
+          "actions": [
+            "做一件轻量的事"
+          ],
+          "executor_basis": "样本：本人顺手就能做",
+          "status": "pending"
+        }
+      ],
+      "deliverables": [],
+      "status": "in_progress",
+      "completed_steps": [],
+      "evidence": [],
+      "decisions": [],
+      "risks": [],
+      "blockers": [],
+      "changes": [],
+      "next_best_action": {
+        "action": "保持基线样本合法",
+        "reason": "反例回归需要一个稳定的对照基线"
+      },
+      "retrospective_status": "not_reviewed",
+      "history": [
+        {
+          "at": "2026-01-01T00:00:00+08:00",
+          "action": "created",
+          "summary": "建立基线样本"
+        }
+      ],
+      "created_at": "2026-01-01T00:00:00+08:00",
+      "updated_at": "2026-01-01T00:00:00+08:00"
+    }
+  ],
+  "last_updated": "2026-01-01T00:00:00+08:00"
+}

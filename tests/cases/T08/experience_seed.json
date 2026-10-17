@@ -1,0 +1,22 @@
+{
+  "experience_id": "EXP-20991231-001",
+  "title": "多选项决策先定维度再比，能减少返工",
+  "conclusion": "在比较多个选项前先把比较维度写下来，可以让后续比较不来回改口径",
+  "domain": "life",
+  "task_type": "decision",
+  "tags": ["决策", "比较维度"],
+  "context": "家庭日常采购/工具选择类的小决策",
+  "trigger_conditions": ["需要在 2 个以上选项之间做选择", "选择依据一开始并不清楚"],
+  "recommended_action": "先列出会改变结论的 3-5 个维度，再逐项比较",
+  "reasoning": "维度先行可以避免「比到一半发现比错了」的返工",
+  "observed_outcome": {"executed": true, "result": "本次比较未出现口径返工"},
+  "evidence": ["用户确认本次比较过程中没有更换维度"],
+  "source_task_id": "{TASK_ID}",
+  "status": "single_observation",
+  "confidence": {"level": "medium", "basis": "单次观察，且任务难度较低"},
+  "limitations": ["只在小规模日常决策上观察过，未在多方参与的复杂决策中验证"],
+  "counterexamples": [],
+  "created_at": "2026-10-15T00:20:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general"
+}

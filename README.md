@@ -33,11 +33,21 @@
 
 ```bash
 # 1. 初始化数据目录（建空的 state/，不会覆盖已有数据）
-python3 scripts/init.py
+python3 nav.py init
 
-# 2. 验证环境（期望 exit=0，结论：通过）
-python3 scripts/validate.py --all
+# 2. 验证环境 + 跑全部测试（期望「全部通过」）
+python3 nav.py test
 ```
+
+**`nav.py` 是统一入口**——不用记 17 个脚本的名字：
+
+```
+python3 nav.py          # 看能做什么
+python3 nav.py show     # 任务总览（每次开工先跑这个）
+python3 nav.py test     # 跑全部测试
+```
+
+**Windows（PowerShell）** 把 `python3` 换成 `python` 即可，其余相同。
 
 ```bash
 # 3. 让 AI 按这份契约办事
@@ -116,15 +126,37 @@ ln -s "$(pwd)/skills/task-navigator" ~/.agents/skills/task-closure
 | `state/schema.json` | 数据契约。**必须保留**——删了脚本会报错 |
 | `LICENSE` | MIT |
 
-**依赖**：Python 3.10+（已在 3.9 / 3.12 实测）。**零第三方库。**
+**依赖**：Python ≥ 3.9（3.9.6 与 3.12 均实测全部测试通过）。**零第三方库。**
 
 ---
+
+## 测试
+
+**测试是随包提供的**，一条命令跑完：
+
+```bash
+python3 nav.py test           # 全部（约 7 秒）
+python3 nav.py test --quick   # 跳过场景测试（约 3 秒）
+```
+
+| 套件 | 守什么 | 规模 |
+|---|---|---|
+| 数据完整性校验 | `state/` 是否符合 `schema.json` | 1800+ 项检查 |
+| **反例测试** | **每条校验规则都配一个「必失败」样本** | 50 个 |
+| 场景测试 | 端到端行为断言 | 157 条 |
+| 单元测试 | 单点逻辑（跨平台路径探测等） | 2 套 |
+
+**反例测试是这套东西的关键**：它保证校验规则不是摆设。
+本项目为此付过代价——有过「规则只注册了名字、检查代码没实现」的情况，
+因为当时没人跑反例，问题一直没暴露。
+
+**CI**：每次 push / PR 在 Python 3.9 / 3.11 / 3.12 上自动跑全部测试。
 
 ## 一条命令看它能干什么
 
 ```bash
-python3 scripts/task_show.py          # 进行中任务总览（会同时打印"开工必读"）
-python3 scripts/task_show.py --help   # 全部用法
+python3 nav.py show          # 任务总览（同时打印"开工必读"）
+python3 nav.py --help        # 全部命令
 ```
 
 数据都在 `state/` 里，是**人可读的 JSON**——你可以直接用文本编辑器看和改。
@@ -150,6 +182,11 @@ python3 scripts/task_show.py --help   # 全部用法
 4. **作者本机环境**：macOS + DSH。其他环境未验证。
 
 ---
+
+## 更新记录
+
+见 `CHANGELOG.md`。当前版本 `0.1.0`——**`0.x` 的意思是接口与数据契约仍可能变**，
+不是谦虚，是它还没在足够多的真实任务上验证过（见「已知限制」）。
 
 ## 许可
 

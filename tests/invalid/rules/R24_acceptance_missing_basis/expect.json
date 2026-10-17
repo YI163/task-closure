@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-ACCEPTANCE",
+  "absent": [],
+  "why": "tasks[].acceptance 三问之一 basis 为空 → 失败"
+}

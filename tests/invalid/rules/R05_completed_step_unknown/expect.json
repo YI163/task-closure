@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-XREF-STEP",
+  "absent": [],
+  "why": "completed_steps 引用不存在的步骤 S9"
+}

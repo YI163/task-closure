@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-STEP-REQ",
+  "absent": [],
+  "why": "standard 深度步骤缺 completion_criteria"
+}

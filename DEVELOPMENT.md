@@ -28,11 +28,16 @@ spec/*.md                 需求与验收依据（脚本会读它判断"做到�
 
 | 目录 | 职责 | 能不能删 |
 |---|---|---|
+| `nav.py` | 统一入口（只转发，不实现逻辑） | 否 |
 | `scripts/` | 全部可执行逻辑 | 否 |
 | `skills/task-navigator/` | 给 AI 的行为契约 | 否（删了这套东西就退化成脚本集合） |
 | `spec/` | 需求与验收依据 | **否**——8 个脚本会读它 |
 | `methods/` | 公开方法论库 | 可（但会失去方法检索） |
+| `tests/` | 回归测试（反例 + 场景 + 单测） | **否**——它是「规则不是摆设」的证据 |
 | `state/` | 你的数据 | `schema.json` 不可删，其余可重建 |
+
+**`scripts/deprecated/` 不在公开包里**——那是开发仓库的考古区（被取代的旧脚本，
+保留只为可追溯）。公开包由 `scripts/build_public_package.py` 按白名单从开发仓库生成。
 
 ---
 
@@ -117,13 +122,16 @@ scripts/validate.py --all     数据完整性校验
 ## 提交前自检清单
 
 ```
-□ python3 scripts/validate.py --all        错误 0 项
-□ 反例测试全过（若你的改动涉及校验规则）
-□ 没有任何硬编码绝对路径（grep "/Users/" 或 "$HOME" 之外的个人路径）
+□ python3 nav.py test                      5 套全过
+□ 没有任何硬编码绝对路径（grep "/Users/"）
 □ 新脚本不绕过 store.py
-□ 新的检查规则做了双向测试
+□ 新的检查规则做了双向测试（造一个必失败样本证明它会失败）
 □ 若改了 schema.json，既有数据已迁移
+□ 若加了新脚本，加进 nav.py 的 COMMANDS 表
 ```
+
+**CI 会自动跑这件事**（`.github/workflows/tests.yml`，Python 3.9 / 3.11 / 3.12），
+所以本地漏跑也会在 push 时暴露——但别依赖它，等 CI 红一遍再改更慢。
 
 ---
 

@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-VERDICT-TEXT",
+  "absent": [],
+  "why": "tasks[].verdict 不在 close 流程结论枚举内 → 失败"
+}

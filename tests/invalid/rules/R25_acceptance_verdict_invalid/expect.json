@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-VERDICT",
+  "absent": [],
+  "why": "acceptance.verdict 取值不在 yes|partial|no|auto 内 → 失败"
+}

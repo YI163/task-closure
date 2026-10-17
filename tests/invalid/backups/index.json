@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "dir": "backups/hash_mismatch",
+      "rule": "B-HASH",
+      "why": "备份内文件 sha256 与 manifest 不符"
+    },
+    {
+      "dir": "backups/records_mismatch",
+      "rule": "B-RECORDS",
+      "why": "备份内文件记录数与 manifest 不符"
+    }
+  ]
+}

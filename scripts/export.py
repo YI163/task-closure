@@ -22,7 +22,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import store  # noqa: E402
 
-DESKTOP = Path.home() / "Desktop" / "任务交付"
+# 交付目录**不再写死**：Windows 桌面可能被 OneDrive 重定向；
+# 也有人不用桌面。探测逻辑在 store.delivery_dir()，
+# 可用环境变量 NAV_DELIVERY_DIR 覆盖。
+DESKTOP = store.delivery_dir()
 
 
 def md_table(rows: list[list[str]], header: list[str]) -> str:

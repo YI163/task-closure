@@ -1,0 +1,169 @@
+{
+  "title": "周五前研究三家竞品并给经理汇报",
+  "original_request": "周五前研究三家竞品，给经理做汇报。",
+  "goal": "产出 3 页竞品对比汇报并让经理能据此做决策",
+  "success_criteria": [
+    "覆盖三家竞品且每家有可核实来源",
+    "给出按统一维度比较的结论与适用条件",
+    "汇报获得经理对下一步方向的确认"
+  ],
+  "domain": "work",
+  "task_type": "research",
+  "planning_depth": "deep",
+  "requester_or_beneficiary": "经理（决策人）",
+  "deadline": "本周五",
+  "constraints": [
+    "不能使用公司内部未公开的竞品数据",
+    "汇报控制在 3 页"
+  ],
+  "assumptions": [
+    "假设经理关注价格与服务响应速度（尚未确认，需在启动时核实）"
+  ],
+  "unknowns": [
+    {
+      "unknown_id": "UN-001",
+      "description": "经理最关注的比较维度",
+      "why_it_matters": "决定 3 页篇幅的取舍",
+      "how_to_verify": "启动时与经理确认 15 分钟"
+    }
+  ],
+  "deliverables": [
+    "3 页竞品对比 PPT",
+    "一页来源清单"
+  ],
+  "evidence": [
+    {
+      "evidence_id": "EV-001",
+      "kind": "fact_check",
+      "description": "与经理沟通确认比较维度为价格与服务响应速度",
+      "source": "2026-10-14 与经理的沟通记录",
+      "recorded_at": "2026-10-14T20:00:00+08:00"
+    }
+  ],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "确认研究目标与范围",
+      "purpose": "避免按错误维度做无用调研",
+      "actions": [
+        "与经理确认关注维度",
+        "确认交付形式与篇幅"
+      ],
+      "required_skills": [
+        {
+          "free_text": "范围确认与提问"
+        }
+      ],
+      "deliverable": "确认后的维度清单",
+      "completion_criteria": "经理明确确认至少两个比较维度",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一次 15 分钟会议估算",
+      "risks_and_fallbacks": [
+        "若经理不在，按假设维度先做并在汇报中标注假设"
+      ],
+      "communication": [
+        "阶段门：启动时确认目标与范围"
+      ],
+      "status": "pending"
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "收集三家竞品公开资料",
+      "purpose": "拿到可核实的比较输入",
+      "actions": [
+        "收集官网规格与定价页",
+        "收集第三方评测"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-006"
+        }
+      ],
+      "deliverable": "资料清单（含来源与获取日期）",
+      "completion_criteria": "三家各至少两个可核实来源",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "1.5 天内",
+      "estimate_basis": "按每家 0.5 天估算",
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ],
+      "status": "pending",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S3",
+      "name": "按统一维度做对比与结论",
+      "purpose": "让经理能快速比较",
+      "actions": [
+        "建立维度表",
+        "给出结论并标注适用条件"
+      ],
+      "required_skills": [
+        {
+          "free_text": "结构化对比"
+        }
+      ],
+      "deliverable": "对比结论草稿",
+      "completion_criteria": "每个维度三家齐备，结论写明适用条件",
+      "inputs_or_dependencies": [
+        "S2"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "按整理 3 家 × 5 维度估算",
+      "communication": [
+        "关键里程碑：汇报前给经理看结论口径"
+      ],
+      "status": "pending",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S4",
+      "name": "汇报并获取反馈",
+      "purpose": "确保结论被采用而不是只被收下",
+      "actions": [
+        "3 页汇报",
+        "记录经理反馈与下一步"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "汇报记录与下一步清单",
+      "completion_criteria": "经理给出明确反馈（认可/修改/否决）",
+      "inputs_or_dependencies": [
+        "S3"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一次汇报会估算",
+      "communication": [
+        "最终交付：汇报并确认下一步"
+      ],
+      "status": "pending",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "与经理确认比较维度",
+    "reason": "维度错误会让后续调研全部返工"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "title": "给老板发送季度汇报",
+  "original_request": "把季度汇报写完并发给老板。",
+  "goal": "季度汇报被老板收到并获得反馈",
+  "success_criteria": [
+    "汇报内容完整且数据有来源",
+    "发送动作经用户明确授权后执行"
+  ],
+  "domain": "work",
+  "task_type": "coordination",
+  "planning_depth": "standard",
+  "constraints": [
+    "发送邮件属外部动作，必须先取得用户明确授权"
+  ],
+  "assumptions": [],
+  "unknowns": [],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "撰写季度汇报草稿",
+      "purpose": "先产出可审阅的草稿",
+      "actions": [
+        "按结论前置结构写",
+        "标注数据来源"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "汇报草稿",
+      "completion_criteria": "草稿可直接被审阅并发送",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "按一稿估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "发送汇报给老板（需用户明确授权）",
+      "purpose": "完成外部交付动作",
+      "actions": [
+        "等待用户明确授权",
+        "授权后发送并记录发送时间与收件人"
+      ],
+      "required_skills": [
+        {
+          "free_text": "邮件发送（工具能力待确认）"
+        }
+      ],
+      "deliverable": "发送记录",
+      "completion_criteria": "有用户明确授权的记录，且发送后保留可核对凭据",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一次发送估算",
+      "communication": [
+        "授权红线：未经明确授权不得发送"
+      ],
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "撰写季度汇报草稿",
+    "reason": "草稿完成前不存在可发送的内容"
+  }
+}

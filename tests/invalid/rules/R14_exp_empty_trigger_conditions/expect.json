@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "E-TRIGGER",
+  "absent": [],
+  "why": "经验没有适用条件（trigger_conditions 为空）"
+}

@@ -1,0 +1,8 @@
+{
+  "actions_completed": {"verdict": "yes", "basis": "调研表与报告均已完成，可交付物在用户工作区"},
+  "deliverables_ok": {"verdict": "yes", "basis": "报告含结论、适用条件与风险，且来源齐备"},
+  "goal_achieved": {"verdict": "partial", "basis": "方案是否被采用取决于王总确认，我方无法自行确认"},
+  "pending_external": ["王总对方案的确认"],
+  "allow_incomplete_steps": true,
+  "allow_incomplete_steps_reason": "S3 属于外部确认步骤，我方无法自行完成，且已如实记录为未完成"
+}

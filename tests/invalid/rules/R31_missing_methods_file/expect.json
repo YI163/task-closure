@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "M-FILE",
+  "absent": [],
+  "why": "methods/index.json 缺失（必需数据域）→ 必须非零退出并指明缺哪个文件；不得记作「未执行=通过」"
+}

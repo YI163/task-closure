@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "E-STATUS-CTX",
+  "absent": [],
+  "why": "经验未执行却写成 single_observation"
+}

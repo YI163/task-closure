@@ -1,0 +1,27 @@
+{
+  "experience_id": "EXP-20260301-004",
+  "title": "合法写入样本：维度压到三个之后一次通过",
+  "conclusion": "把对比维度压到三个之后，汇报一次通过（样本数据）",
+  "domain": "work",
+  "task_type": "research",
+  "tags": ["竞品", "维度", "汇报"],
+  "context": "合法样本：用于验证 exp.py add 在证据齐全时确实写入",
+  "trigger_conditions": ["需要对比 3 家以上竞品并向经理汇报时"],
+  "recommended_action": "先定三个必比维度，再补细节",
+  "reasoning": "维度少便于在短期限内收敛结论",
+  "observed_outcome": {
+    "executed": true,
+    "result": "样本：按三个维度做完对比，汇报一次通过"
+  },
+  "evidence": ["样本任务 TN-20260101-001：三个维度的对比稿被直接采用"],
+  "source_task_id": "TN-20260101-001",
+  "status": "single_observation",
+  "confidence": {"level": "low", "basis": "构造样本"},
+  "limitations": ["样本数据，不代表真实项目经验"],
+  "counterexamples": [],
+  "created_at": "2026-03-01T00:00:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general",
+  "related_skill_ids": ["SK-20260101-001"],
+  "related_method_ids": ["MT-20260101-001"]
+}

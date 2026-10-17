@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "S-WEAK-NAME",
+  "absent": [],
+  "why": "技能名使用不可验证弱表述「沟通能力很好」"
+}

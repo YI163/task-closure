@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-STEP-EXECUTOR",
+  "absent": [],
+  "why": "light 深度步骤同样必须声明执行者 → 非零退出（没有执行者的步骤同样不是步骤）"
+}

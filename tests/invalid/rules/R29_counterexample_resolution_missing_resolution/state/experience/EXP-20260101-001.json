@@ -1,0 +1,60 @@
+{
+  "experience_id": "EXP-20260101-001",
+  "title": "基线样本：先写反例再写校验规则",
+  "conclusion": "先为每条规则准备违规样本，再实现规则，才能证明校验真的生效",
+  "domain": "work",
+  "task_type": "execution",
+  "tags": [
+    "校验器",
+    "反例",
+    "数据契约"
+  ],
+  "context": "基线样本：为 validate.py 建立反例回归",
+  "trigger_conditions": [
+    "需要实现依赖 schema 的校验器时"
+  ],
+  "recommended_action": "为每条规则准备一个只注入一处违规的样本，并断言校验器非零退出",
+  "reasoning": "只有反例能证明规则在数据被破坏时真的会失败",
+  "observed_outcome": {
+    "executed": true,
+    "result": "基线样本：该做法在本次实现中已执行（构造数据，不代表真实用户经验）"
+  },
+  "evidence": [
+    "tests/invalid/rules/ 下每个反例的校验器输出（样本）"
+  ],
+  "source_task_id": "TN-20260101-001",
+  "status": "single_observation",
+  "confidence": {
+    "level": "low",
+    "basis": "构造样本，非真实观察"
+  },
+  "limitations": [
+    "样本数据，不代表真实项目经验"
+  ],
+  "counterexamples": [],
+  "created_at": "2026-01-01T00:00:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general",
+  "related_skill_ids": [
+    "SK-20260101-001"
+  ],
+  "related_method_ids": [
+    "MT-20260101-001"
+  ],
+  "review_history": [
+    {
+      "at": "2026-01-01T00:00:00+08:00",
+      "from_status": "to_verify",
+      "to_status": "single_observation",
+      "note": "样本：已执行并留下证据，故从待验证改为单次观察",
+      "evidence_count": 1,
+      "previous_last_reviewed_at": null
+    }
+  ],
+  "counterexample_resolutions": [
+    {
+      "at": "2026-01-01T00:00:00+08:00",
+      "from_status": "challenged_by_counterexample"
+    }
+  ]
+}

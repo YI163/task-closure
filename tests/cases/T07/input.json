@@ -1,0 +1,118 @@
+{
+  "title": "准备产品发布会初稿",
+  "original_request": "下周五提交发布会材料。",
+  "goal": "产出可直接进入评审的发布会材料",
+  "success_criteria": [
+    "材料覆盖议程与讲稿要点",
+    "关键数据有来源",
+    "通过内部评审"
+  ],
+  "domain": "work",
+  "task_type": "writing",
+  "planning_depth": "standard",
+  "deadline": "本周五",
+  "assumptions": [
+    "假设关键数据在周三前到位"
+  ],
+  "unknowns": [
+    {
+      "unknown_id": "UN-001",
+      "description": "关键数据（销量与留存）是否按时提供",
+      "why_it_matters": "数据缺失会使结论部分无法定稿",
+      "how_to_verify": "周三前向数据团队确认"
+    }
+  ],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "收集关键数据与素材",
+      "purpose": "为材料提供事实基础",
+      "actions": [
+        "等待数据团队提供销量与留存",
+        "整理素材清单"
+      ],
+      "required_skills": [
+        {
+          "free_text": "跨团队协调"
+        }
+      ],
+      "deliverable": "数据与素材包",
+      "completion_criteria": "销量与留存数据齐备且有来源",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "2 天内",
+      "estimate_basis": "依赖数据团队排期，存在延迟风险",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "写发布会材料初稿",
+      "purpose": "形成可评审的初稿",
+      "actions": [
+        "按议程结构写",
+        "结论前置"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "材料初稿",
+      "completion_criteria": "覆盖议程与讲稿要点",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "2 天内",
+      "estimate_basis": "按一稿估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S3",
+      "name": "内部评审并修改",
+      "purpose": "确保材料能被采用",
+      "actions": [
+        "组织评审",
+        "按意见修改"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "评审后定稿",
+      "completion_criteria": "评审意见全部处理完毕",
+      "inputs_or_dependencies": [
+        "S2"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "按一次评审估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "向数据团队确认数据到位时间",
+    "reason": "S1 是全部后续步骤的前置"
+  }
+}

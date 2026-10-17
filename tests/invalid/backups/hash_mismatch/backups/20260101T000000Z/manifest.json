@@ -1,0 +1,12 @@
+{
+  "created_at": "2026-01-01T00:00:00+08:00",
+  "reason": "反例：备份内文件哈希与 manifest 不一致",
+  "schema_version": "1.0",
+  "files": [
+    {
+      "path": "state/tasks.json",
+      "sha256": "e36207cbc533eabcd752b8df77599eb4555f7966e938615023e2e0e009df446e",
+      "records": 1
+    }
+  ]
+}

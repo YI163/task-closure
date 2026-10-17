@@ -1,0 +1,12 @@
+{
+  "created_at": "2026-01-01T00:00:00+08:00",
+  "reason": "反例：manifest 记录数与备份文件实际记录数不一致",
+  "schema_version": "1.0",
+  "files": [
+    {
+      "path": "state/tasks.json",
+      "sha256": "a3d5554d95f5ecfdd3fb6b02bc4baea512fbdae608af62e3024a6c501af4f661",
+      "records": 7
+    }
+  ]
+}

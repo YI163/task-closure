@@ -1,0 +1,31 @@
+{
+  "skills": [
+    {
+      "skill_id": "SK-20260101-001",
+      "skill_name": "按字段清单核对 JSON 结构",
+      "scope": "能做：按给定字段清单逐项核对 JSON。不包括：独立设计数据契约。",
+      "status": "can_with_checklist",
+      "evidence": [
+        {
+          "kind": "guided_practice",
+          "description": "基线样本中照清单核对了一次（刻意构造的样本数据）",
+          "task_id": "TN-20260101-999",
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "basis": "样本自述，属构造数据"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "未验证独立设计契约的能力"
+      ],
+      "related_tasks": [
+        "TN-20260101-001"
+      ],
+      "privacy_scope": "general"
+    }
+  ],
+  "last_updated": "2026-01-01T00:00:00+08:00"
+}

@@ -1,0 +1,180 @@
+{
+  "tasks": [
+    {
+      "task_id": "TN-20260101-001",
+      "title": "基线样本：证明反例失败来自注入的违规",
+      "original_request": "（tests/invalid/ 基线样本，不是真实用户任务）",
+      "domain": "work",
+      "task_type": "execution",
+      "goal": "提供一个字段完整的任务记录，作为全部反例的对照",
+      "requester_or_beneficiary": null,
+      "success_criteria": [
+        "validate.py --all 对该样本 exit 0"
+      ],
+      "deadline": null,
+      "constraints": [],
+      "assumptions": [
+        "仅用于校验器回归测试"
+      ],
+      "unknowns": [],
+      "planning_depth": "standard",
+      "plan": [
+        {
+          "step_id": "S1",
+          "name": "写一份字段完整的任务记录",
+          "purpose": "让反例有可对照的合法基线",
+          "actions": [
+            "补齐 schema.tasks.required_fields"
+          ],
+          "required_skills": [
+            {
+              "skill_ref": "JSON 字段对照（自由文本，不查档案）",
+              "gap": "未评估：测试夹具用途，按 can_with_checklist 对待"
+            }
+          ],
+          "executor": "user",
+          "executor_basis": "样本：字段对照涉及用户自己的数据，必须本人确认，AI 不能替他决定",
+          "deliverable": "一份合法的 tasks.json",
+          "completion_criteria": "validate.py --all 对基线 exit 0",
+          "inputs_or_dependencies": [
+            "不适用：本步是流程起点，无前置"
+          ],
+          "risks_and_fallbacks": [
+            "不适用：填写记录为固定动作，无实质风险"
+          ],
+          "communication": [
+            "不适用：本步骤无外部依赖方"
+          ],
+          "status": "done",
+          "time_estimate": "约 10 分钟",
+          "estimate_basis": "按填写一份完整任务记录估算"
+        },
+        {
+          "step_id": "S2",
+          "name": "注入一处违规并断言失败",
+          "purpose": "证明规则真的会失败，而不是只对合法数据静默通过",
+          "actions": [
+            "复制基线",
+            "只改一处",
+            "运行校验器并断言非零退出"
+          ],
+          "required_skills": [
+            {
+              "skill_id": "SK-20260101-001"
+            }
+          ],
+          "executor": "joint",
+          "executor_basis": "样本：AI 起草反例、用户核对规则，属共同做",
+          "deliverable": "tests/invalid/rules/ 下的反例样本",
+          "completion_criteria": "校验器非零退出且报出预期规则 id",
+          "inputs_or_dependencies": [
+            "S1"
+          ],
+          "risks_and_fallbacks": [
+            "若注入的违规未被检出，说明校验规则失效——需人工复核规则是否真的在执行"
+          ],
+          "communication": [
+            "不适用：本步骤无外部依赖方"
+          ],
+          "status": "pending",
+          "time_estimate": "约 10 分钟",
+          "estimate_basis": "按注入一处违规并复跑校验估算"
+        },
+        {
+          "step_id": "S3",
+          "name": "把样本数据排成对比表",
+          "purpose": "纯机械劳动，没有学习价值，适合 AI 代做",
+          "actions": [
+            "按列宽把 200 行样本数据排版",
+            "导出为表格文本"
+          ],
+          "required_skills": [
+            {
+              "skill_ref": "表格排版（自由文本，不查档案）",
+              "gap": "未评估：测试夹具用途，按 can_with_checklist 对待"
+            }
+          ],
+          "executor": "ai",
+          "executor_basis": "样本：纯机械排版，用户无需亲自做，AI 代做更省时间",
+          "delegation_reason": "纯机械劳动",
+          "deliverable": "排好版的对比表",
+          "completion_criteria": "表格可直接复制使用且列对齐",
+          "inputs_or_dependencies": [
+            "S1"
+          ],
+          "risks_and_fallbacks": [
+            "不适用：表格整理为机械动作"
+          ],
+          "communication": [
+            "不适用：本步骤无外部依赖方"
+          ],
+          "status": "pending",
+          "time_estimate": "约 5 分钟",
+          "estimate_basis": "按整理三列对比表估算"
+        }
+      ],
+      "deliverables": [],
+      "status": "in_progress",
+      "completed_steps": [
+        {
+          "step_id": "S1",
+          "completed_at": "2026-01-01T00:00:00+08:00",
+          "evidence": "基线样本自检：validate.py --all --state-dir tests/invalid/baseline/state 退出码 0",
+          "notes": "样本数据"
+        }
+      ],
+      "evidence": [],
+      "decisions": [],
+      "risks": [],
+      "blockers": [],
+      "changes": [],
+      "next_best_action": {
+        "action": "保持基线样本合法",
+        "reason": "反例回归需要一个稳定的对照基线"
+      },
+      "retrospective_status": "not_reviewed",
+      "history": [
+        {
+          "at": "2026-01-01T00:00:00+08:00",
+          "action": "created",
+          "summary": "建立基线样本"
+        }
+      ],
+      "created_at": "2026-01-01T00:00:00+08:00",
+      "updated_at": "2026-01-01T00:00:00+08:00",
+      "acceptance": {
+        "closed_at": "2026-01-01T00:00:00+08:00",
+        "actions_completed": {
+          "verdict": "yes",
+          "basis": "样本：计划内步骤都已处理"
+        },
+        "deliverables_ok": {
+          "verdict": "yes",
+          "basis": "样本：产出物已完成"
+        },
+        "goal_achieved": {
+          "verdict": "partial",
+          "basis": "样本：仍待外部确认"
+        },
+        "pending_external": [
+          "样本：等对方确认"
+        ],
+        "verdict": "auto"
+      },
+      "verdict": "我方工作已完成，最终目标尚待确认",
+      "plan_history": [
+        {
+          "archived_at": "2026-01-01T00:00:00+08:00",
+          "reason": "样本：把对比维度从 5 个压到 3 个",
+          "plan": [
+            {
+              "step_id": "S1",
+              "name": "旧计划的第一步"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "last_updated": "2026-01-01T00:00:00+08:00"
+}

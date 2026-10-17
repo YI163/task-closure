@@ -1,0 +1,44 @@
+{
+  "experience_id": "EXP-20260201-002",
+  "title": "竞品对比：旧官网检索路径",
+  "conclusion": "直接抓竞品官网静态参数页最省事",
+  "domain": "work",
+  "task_type": "research",
+  "tags": [
+    "竞品",
+    "调研",
+    "官网"
+  ],
+  "context": "样本：用于验证 exp.py search 的适用性判断与排除逻辑",
+  "trigger_conditions": [
+    "需要在竞品官网抓参数时"
+  ],
+  "recommended_action": "先把对比维度压到 3 个，再补细节",
+  "reasoning": "维度越少越容易在短期限内得出可用结论",
+  "observed_outcome": {
+    "executed": true,
+    "result": "样本观察结果（构造数据，非真实项目经验）"
+  },
+  "evidence": [
+    "TN-20260101-001：当时官网静态页可直接抓取"
+  ],
+  "source_task_id": "TN-20260101-001",
+  "status": "obsolete",
+  "confidence": {
+    "level": "low",
+    "basis": "构造样本"
+  },
+  "limitations": [
+    "2026-03 起竞品官网改为动态渲染，原检索路径失效"
+  ],
+  "counterexamples": [],
+  "created_at": "2026-01-01T00:00:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general",
+  "related_skill_ids": [
+    "SK-20260101-001"
+  ],
+  "related_method_ids": [
+    "MT-20260101-001"
+  ]
+}

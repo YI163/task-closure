@@ -1,0 +1,14 @@
+{
+  "title": "负向探测：light 步骤只有名称、没有 actions",
+  "original_request": "（探测用输入，不对应真实用户请求）",
+  "goal": "检验 light 深度下「只有步骤名称、没有 actions」的输入是否被接受，以及写入结果能否通过 validate.py",
+  "success_criteria": ["本输入仅用于契约一致性探测"],
+  "domain": "other",
+  "task_type": "other",
+  "planning_depth": "light",
+  "unknowns": [],
+  "plan": [
+    { "executor": "user", "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则", "name": "只有名称的步骤", "status": "pending"}
+  ],
+  "next_best_action": {"action": "见探测结论", "reason": "探测用例"}
+}

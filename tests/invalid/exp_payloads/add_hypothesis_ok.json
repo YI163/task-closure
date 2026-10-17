@@ -1,0 +1,27 @@
+{
+  "experience_id": "EXP-20260301-002",
+  "title": "假设：先把对比维度压到三个（计划从未执行）",
+  "conclusion": "把对比维度压到三个可能比全量对比更快得出可汇报的结论（尚未执行，仅为待验证假设）",
+  "domain": "work",
+  "task_type": "research",
+  "tags": ["竞品", "维度"],
+  "context": "样本：未执行的方法只能登记为待验证假设",
+  "trigger_conditions": ["需要对比 3 家以上竞品但时间很紧时"],
+  "recommended_action": "先定 3 个必比维度，再按需补细节",
+  "reasoning": "维度越少越容易在短期限内得出结论，但尚未验证",
+  "observed_outcome": {
+    "executed": false,
+    "result": "计划尚未执行（样本）"
+  },
+  "evidence": [],
+  "source_task_id": "TN-20260101-001",
+  "status": "to_verify",
+  "confidence": {"level": "low", "basis": "尚无任何实际结果，仅属假设"},
+  "limitations": ["尚未执行，没有任何观察结果"],
+  "counterexamples": [],
+  "created_at": "2026-03-01T00:00:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general",
+  "related_skill_ids": ["SK-20260101-001"],
+  "related_method_ids": ["MT-20260101-001"]
+}

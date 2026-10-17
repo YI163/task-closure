@@ -1,0 +1,6 @@
+{
+  "actions_completed": {"verdict": "yes", "basis": "我认为做完了"},
+  "deliverables_ok": {"verdict": "yes", "basis": "看起来没问题"},
+  "goal_achieved": {"verdict": "yes", "basis": "我觉得可以算完成"},
+  "pending_external": []
+}

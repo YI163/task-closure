@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-XREF-SKILL",
+  "absent": [],
+  "why": "skill_ref 形如 ^SK-\\d{8}-\\d{3}$ 但档案中不存在 → 必须硬失败（规则不得弱化）"
+}

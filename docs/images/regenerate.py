@@ -41,7 +41,10 @@ import tempfile
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 PY = sys.executable
-CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+# 浏览器路径不写死：Windows / Linux 上 macOS 路径不存在。
+# 探测逻辑在 scripts/store.py 的 find_chrome()，可用 CHROME_PATH 覆盖。
+sys.path.insert(0, str(REPO / "scripts"))
+import store  # noqa: E402
 
 # ── 图 1：流程图的定义 ──
 FLOWCHART_SPEC = {
@@ -137,10 +140,13 @@ LABELS = ("执行者：", "完成标准：", "产出：", "目的：",
 
 
 def render_html_to_png(doc: str, out: pathlib.Path, width: int, height: int) -> None:
+    chrome = store.find_chrome()
+    if chrome is None:
+        raise SystemExit(store.chrome_help_text())
     tmp = pathlib.Path(tempfile.mkdtemp()) / "page.html"
     tmp.write_text(doc, encoding="utf-8")
     subprocess.run(
-        [CHROME, "--headless", "--disable-gpu", "--hide-scrollbars",
+        [str(chrome), "--headless", "--disable-gpu", "--hide-scrollbars",
          "--force-device-scale-factor=2", "--default-background-color=FF1A1D21",
          f"--screenshot={out}", f"--window-size={width},{height}", str(tmp)],
         capture_output=True, text=True, timeout=120, check=False)
@@ -165,16 +171,37 @@ def make_task_card() -> None:
     sandbox = work / "repo"
     shutil.copytree(REPO, sandbox,
                     ignore=shutil.ignore_patterns(".git", "__pycache__", "backups"))
+
+    # ⚠️ 关键：把沙盒的 state/ 重置成「全新安装」状态。
+    # 不这么做的话，示例任务会排在真实任务后面，task_show 会把**真实任务列表**
+    # 一起渲染进 README 的图里——那是数据泄露，而且图上会有 10 个真实任务。
+    # 实测：在开发仓库里直接跑，图从 32 行变成 75 行、从 324 KB 变成 1.4 MB。
+    state_dir = sandbox / "state"
+    for child in state_dir.iterdir():
+        if child.name == "schema.json":
+            continue
+        shutil.rmtree(child) if child.is_dir() else child.unlink()
+
     subprocess.run([PY, "scripts/init.py"], cwd=sandbox, capture_output=True)
     (work / "task.json").write_text(json.dumps(DEMO_TASK, ensure_ascii=False), encoding="utf-8")
     subprocess.run([PY, "scripts/task_new.py", "--input", str(work / "task.json")],
                    cwd=sandbox, capture_output=True)
 
-    sys.path.insert(0, str(sandbox / "scripts"))
-    import store  # type: ignore
-    data = store.load_tasks()
+    # ⚠️ 绝对不要在这里 `import store` 来读写沙盒数据。
+    # Python 的模块缓存会返回**本文件开头导入的那个 store**（指向开发仓库），
+    # 于是 load_tasks / write_json 全部作用在**真实数据**上。
+    # 实测事故：这一步把真实任务 TN-20261017-001 的 4 步计划覆盖成了示例步骤。
+    # 正确做法：直接读写沙盒里的 JSON 文件，不经过任何模块级状态。
+    tasks_path = sandbox / "state" / "tasks.json"
+    data = json.loads(tasks_path.read_text(encoding="utf-8"))
+    if len(data.get("tasks", [])) != 1:
+        raise SystemExit(
+            f"沙盒里应只有 1 个示例任务，实际 {len(data.get('tasks', []))} 个——"
+            "state/ 没重置干净，继续下去会把真实数据画进图里。已中止。"
+        )
     data["tasks"][-1]["plan"] = DEMO_STEPS
-    store.write_json(store.STATE_DIR / "tasks.json", data)
+    tasks_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+                          encoding="utf-8")
     tid = data["tasks"][-1]["task_id"]
 
     out = subprocess.run([PY, "scripts/task_show.py", "--task", tid],
@@ -222,8 +249,8 @@ def make_task_card() -> None:
 
 
 def main() -> int:
-    if not pathlib.Path(CHROME).is_file():
-        print(f"找不到 Chrome：{CHROME}", file=sys.stderr)
+    if store.find_chrome() is None:
+        print(store.chrome_help_text(), file=sys.stderr)
         return 1
     print("重新生成 README 图片：")
     make_flowchart()

@@ -1,0 +1,107 @@
+{
+  "title": "完成选型调研并让决策人确认方案",
+  "original_request": "把选型调研做完，报告给我，等王总确认后我们再用。",
+  "goal": "方案获得决策人确认并被采用",
+  "success_criteria": [
+    "调研表与报告完成且可审阅",
+    "决策人对方案给出明确确认"
+  ],
+  "domain": "work",
+  "task_type": "research",
+  "planning_depth": "standard",
+  "deadline": "本周内",
+  "assumptions": [],
+  "unknowns": [],
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "完成选型调研表",
+      "purpose": "拿齐比较输入",
+      "actions": [
+        "按维度填表"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-006"
+        }
+      ],
+      "deliverable": "调研表",
+      "completion_criteria": "每个维度都有来源",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "1 天",
+      "estimate_basis": "按维度数估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "完成选型报告",
+      "purpose": "形成可决策的交付物",
+      "actions": [
+        "结论前置",
+        "写明适用条件与风险"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "选型报告",
+      "completion_criteria": "含结论、适用条件、风险",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "1 天",
+      "estimate_basis": "按一稿估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S3",
+      "name": "决策人确认方案",
+      "purpose": "目标实现的关键外部条件",
+      "actions": [
+        "提交报告",
+        "记录决策人意见"
+      ],
+      "required_skills": [
+        {
+          "free_text": "跨层级沟通"
+        }
+      ],
+      "deliverable": "确认记录",
+      "completion_criteria": "决策人明确表示确认或提出修改",
+      "inputs_or_dependencies": [
+        "S2"
+      ],
+      "time_estimate": "取决于对方排期",
+      "estimate_basis": "外部依赖，无法自行估算",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    }
+  ],
+  "next_best_action": {
+    "action": "完成选型调研表",
+    "reason": "调研表是报告的前置"
+  }
+}

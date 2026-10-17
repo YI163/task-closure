@@ -1,0 +1,39 @@
+{
+  "experience_id": "EXP-20991231-801",
+  "title": "新流程先小范围试点更省时间",
+  "conclusion": "先小范围试点再推广，比直接全面推广更省总时间",
+  "domain": "work",
+  "task_type": "execution",
+  "tags": [
+    "试点",
+    "对照样本"
+  ],
+  "context": "在 30 人以内的团队中推广过一次新流程",
+  "trigger_conditions": [
+    "团队规模小于 30 人",
+    "流程变更会影响多个岗位"
+  ],
+  "recommended_action": "先在一个小组试点两周，再全面推广",
+  "reasoning": "试点暴露的问题可以在小范围内低成本修复",
+  "observed_outcome": {
+    "executed": true,
+    "result": "试点期间发现 2 个阻塞问题，避免了全员返工"
+  },
+  "evidence": [
+    "试点小组的两次问题记录",
+    "推广阶段未出现同类阻塞"
+  ],
+  "source_task_id": "{TASK_ID}",
+  "status": "single_observation",
+  "confidence": {
+    "level": "medium",
+    "basis": "单次执行观察"
+  },
+  "limitations": [
+    "只在一个 30 人团队验证过"
+  ],
+  "counterexamples": [],
+  "created_at": "2026-10-15T00:20:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "work"
+}

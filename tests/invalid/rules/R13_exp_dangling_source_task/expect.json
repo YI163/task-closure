@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "E-SOURCE",
+  "absent": [],
+  "why": "经验 source_task_id 悬空"
+}

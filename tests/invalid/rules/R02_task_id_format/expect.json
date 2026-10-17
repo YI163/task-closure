@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-ID-FMT",
+  "absent": [],
+  "why": "task_id 格式违规：TN-2026-001"
+}

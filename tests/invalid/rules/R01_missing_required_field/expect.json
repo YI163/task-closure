@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-REQ",
+  "absent": [],
+  "why": "必填字段缺失：删掉 next_best_action"
+}

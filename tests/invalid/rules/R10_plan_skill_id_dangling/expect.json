@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-XREF-SKILL",
+  "absent": [],
+  "why": "计划技能需求指向不存在的 skill_id"
+}

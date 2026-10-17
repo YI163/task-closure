@@ -1,0 +1,64 @@
+name: tests
+
+# 为什么有这个工作流
+# ─────────────────────
+# 项目有 157 条场景断言 + 50 条反例，但此前只有「作者本机手跑」。
+# 后果：别人改一行代码，无法自动知道有没有破坏既有的校验规则；
+# 作者自己也容易只跑一条就以为全过（实测踩过：改了校验规则只跑 validate，
+# 反例全红却不知道）。
+#
+# 现在：每次 push / PR 自动跑全部三套测试，跨 Python 版本。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:        # 允许在 GitHub 页面手动触发
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false          # 一个版本挂了，其他版本继续跑，看清全貌
+      matrix:
+        # 3.9 = README 声称的最低版本；3.12 = 开发环境版本
+        python-version: ["3.9", "3.11", "3.12"]
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 项目零第三方依赖（纯标准库），所以没有 pip install 这一步。
+      # 如果将来加了依赖，这里要补。
+
+      - name: 显示环境（便于排查）
+        run: |
+          python --version
+          python -c "import sqlite3, json, pathlib; print('标准库可用')"
+
+      - name: 初始化数据目录
+        run: python scripts/init.py
+
+      - name: 跑全部测试
+        run: python tests/run_all.py --verbose
+
+      # 失败时把测试报告作为产物留下，方便排查
+      - name: 上传测试报告（仅失败时）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-py${{ matrix.python-version }}
+          path: |
+            reports/TEST_RUN_REPORT.md
+          if-no-files-found: ignore
+          retention-days: 7

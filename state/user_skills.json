@@ -1,0 +1,260 @@
+{
+  "skills": [
+    {
+      "skill_id": "SK-20261014-001",
+      "skill_name": "示例技能一（可照检查表完成）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "can_with_checklist",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261014-002",
+      "skill_name": "示例技能二（尚不会）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "not_yet",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261014-003",
+      "skill_name": "示例技能三（尚不会）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "not_yet",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "low",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261014-004",
+      "skill_name": "示例技能四（尚不会）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "not_yet",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261014-005",
+      "skill_name": "示例技能五（尚不会）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "not_yet",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "high",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261014-006",
+      "skill_name": "示例技能六（可照检查表完成）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "can_with_checklist",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261014-007",
+      "skill_name": "示例技能七（可照检查表完成）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "can_with_checklist",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261014-008",
+      "skill_name": "示例技能八（可独立完成）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "can_independently",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        },
+        {
+          "kind": "independent_operation",
+          "description": "公开版占位证据：真实独立操作记录已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    },
+    {
+      "skill_id": "SK-20261015-001",
+      "skill_name": "示例技能九（可照检查表完成）",
+      "scope": "能做：示例范围（公开版为脱敏样本，不含真实能力描述）。",
+      "status": "can_with_checklist",
+      "evidence": [
+        {
+          "kind": "self_report",
+          "description": "公开版占位证据：真实档案里的用户原话已移除。",
+          "task_id": null,
+          "at": "2026-01-01T00:00:00+08:00"
+        }
+      ],
+      "confidence": {
+        "level": "medium",
+        "basis": "公开版占位说明：真实档案里的判断依据已移除。"
+      },
+      "last_verified_at": null,
+      "known_gaps": [
+        "公开版占位：真实技能缺口已移除。",
+        "若要升级到 can_independently，需要一次独立完成的实例（无提示条件下自己做出产物，或观察到测试结果）"
+      ],
+      "preferred_learning_mode": "照检查表逐步操作",
+      "related_tasks": [],
+      "privacy_scope": "general",
+      "notes": "这是公开版的脱敏样本，用于让测试可运行。真实档案不含在此仓库。"
+    }
+  ],
+  "last_updated": "2026-10-15T08:54:45+08:00",
+  "profile_meta": {
+    "source": "公开版脱敏样本（由开发仓库的真实档案结构派生，内容全部通用化）",
+    "collected_by": "构建脚本 scripts/build_public_package.py",
+    "user_control": "初始为示例数据。你自己使用后会逐渐变成你的真实档案；可直接编辑，改完跑 scripts/validate.py --all。",
+    "upgrade_rule_reminder": "状态只能由独立操作或观察到的测试结果支持而升级。「AI 讲解过」「在指导下完成一次」都不构成升级依据。"
+  }
+}

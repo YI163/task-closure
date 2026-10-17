@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-EVIDENCE-EMPTY",
+  "absent": [],
+  "why": "completed_steps 无 evidence：无证据不得标记完成"
+}

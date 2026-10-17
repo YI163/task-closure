@@ -1,0 +1,16 @@
+{
+  "scenario": "数据更新具备恢复手段：对 state/tasks.json 做一次批量改写（模拟迁移），要求改写前有可恢复备份，并核对记录数与必填字段",
+  "steps": [
+    "记录改写前 state/tasks.json 的 sha256 与任务数",
+    "执行一次真实写入（由 task_update.py 触发 store.create_backup）",
+    "用 validate.py --backup-verify 校验最新备份的 manifest / sha256 / 记录数",
+    "故意把 state/tasks.json 写成非法 JSON，验证系统明确报错且不静默通过",
+    "用备份文件恢复 state/tasks.json，验证 sha256 与改写前一致（数据未丢失）"
+  ],
+  "expect": {
+    "backup_before_write": true,
+    "manifest_fields": ["created_at", "reason", "files[].path", "files[].sha256", "files[].records", "schema_version"],
+    "broken_json_exit_nonzero": true,
+    "restore_sha256_matches": true
+  }
+}

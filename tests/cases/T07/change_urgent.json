@@ -1,0 +1,101 @@
+{
+  "what": "交付提前到本周三，且关键数据尚未到位：范围压缩为「议程 + 讲稿要点」，销量/留存数据改为标注占位",
+  "why": "任务发起人（部门负责人）临时要求周三先交初稿用于提前评审",
+  "impact": "S1 无法按原计划拿到数据；S2 必须提前启动并使用占位标注；S3 评审时间被压缩到周三当天",
+  "trigger": "requester_change",
+  "quality_floor": "对外数字不得编造：数据未到位时一律标注「占位，待更新」，讲稿结论不得基于未核实数据；来源与口径说明不得省略",
+  "new_deadline": "本周三",
+  "archive_plan": true,
+  "plan": [
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S1",
+      "name": "当天确认数据可用性并向发起人说明风险",
+      "purpose": "让发起人知道压缩期限对数据完整性的影响",
+      "actions": [
+        "向数据团队确认最早到位时间",
+        "把风险与两个可选方案（先交占位初稿/推迟数据部分）告知发起人"
+      ],
+      "required_skills": [
+        {
+          "free_text": "风险沟通"
+        }
+      ],
+      "deliverable": "风险说明与方案选项",
+      "completion_criteria": "发起人明确选择其中一个方案",
+      "inputs_or_dependencies": [
+        "不适用：S1 为测试夹具步骤，无前置依赖"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一次沟通估算",
+      "communication": [
+        "立即升级：期限变更 + 依赖未到位"
+      ],
+      "status": "pending",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S2",
+      "name": "当天完成议程与讲稿要点初稿（数据占位）",
+      "purpose": "保证周三有可评审的初稿",
+      "actions": [
+        "先写结构与结论口径",
+        "数据处标注占位并列出待补清单"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "初稿（含待补清单）",
+      "completion_criteria": "结构完整、占位处全部显式标注、待补清单可执行",
+      "inputs_or_dependencies": [
+        "S1"
+      ],
+      "time_estimate": "1 天内",
+      "estimate_basis": "按压缩范围估算",
+      "status": "pending",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    },
+    {
+      "executor": "user",
+      "executor_basis": "测试夹具：按默认规则补齐（用户自己的事务默认用户做、AI 指导）——本场景测的是其它规则",
+      "step_id": "S3",
+      "name": "周三评审并把数据补齐计划写进结论",
+      "purpose": "确保压缩交付不会静默降低质量",
+      "actions": [
+        "评审初稿",
+        "在结论中写明数据补齐时间点与责任人"
+      ],
+      "required_skills": [
+        {
+          "skill_id": "SK-20261014-004"
+        }
+      ],
+      "deliverable": "评审记录与补齐计划",
+      "completion_criteria": "补齐计划含时间点与责任人",
+      "inputs_or_dependencies": [
+        "S2"
+      ],
+      "time_estimate": "0.5 天内",
+      "estimate_basis": "按一次评审估算",
+      "status": "pending",
+      "risks_and_fallbacks": [
+        "不适用：测试夹具步骤，无实质风险"
+      ],
+      "communication": [
+        "不适用：测试夹具步骤，无外部依赖方"
+      ]
+    }
+  ]
+}

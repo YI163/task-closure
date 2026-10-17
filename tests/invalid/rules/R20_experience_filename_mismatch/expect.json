@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "E-FILENAME",
+  "absent": [],
+  "why": "经验文件名与 experience_id 不一致（一条一文件）"
+}

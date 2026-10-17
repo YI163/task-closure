@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "T-STEP-EXECUTOR-BASIS",
+  "absent": [],
+  "why": "步骤有 executor 但缺 executor_basis → 非零退出（只写执行者名字不算表态）"
+}

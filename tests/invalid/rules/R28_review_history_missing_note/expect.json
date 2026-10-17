@@ -1,0 +1,6 @@
+{
+  "kind": "fail",
+  "rule": "E-REVIEW-HISTORY",
+  "absent": [],
+  "why": "review_history 记录缺 note（复核无理由）→ 失败"
+}

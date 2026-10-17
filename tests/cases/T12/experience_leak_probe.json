@@ -1,0 +1,34 @@
+{
+  "experience_id": "EXP-20991231-911",
+  "title": "客户 ZX-9 的续约谈判要点（未去敏探测样本）",
+  "conclusion": "客户 ZX-9 未公开定价 8.5 折可接受，续约条款第 3 条可让步",
+  "domain": "work",
+  "task_type": "writing",
+  "tags": [
+    "续约"
+  ],
+  "context": "探测用：故意把客户机密原文放进通用经验字段",
+  "trigger_conditions": [
+    "遇到续约谈判"
+  ],
+  "recommended_action": "按 ZX-9 的未公开定价 8.5 折作为起点",
+  "reasoning": "ZX-9 上一轮接受过该折扣",
+  "observed_outcome": {
+    "executed": true,
+    "result": "谈判一次成"
+  },
+  "evidence": [
+    "内部会议记录（含未公开定价）"
+  ],
+  "source_task_id": "{TASK_ID}",
+  "status": "single_observation",
+  "confidence": {
+    "level": "medium",
+    "basis": "单次谈判"
+  },
+  "limitations": [],
+  "counterexamples": [],
+  "created_at": "2026-10-15T00:20:00+08:00",
+  "last_reviewed_at": null,
+  "privacy_scope": "general"
+}

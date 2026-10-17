@@ -1,0 +1,6 @@
+{
+  "step_id": "S1",
+  "evidence": "本季数据已导出为 report_q3.xlsx 并记录来源哈希；与财务口径一致（核对人：用户本人）",
+  "notes": "数据来源：财务系统导出，导出于 2026-10-14",
+  "verification": {"kind": "self_report", "description": "用户确认导出成功"}
+}

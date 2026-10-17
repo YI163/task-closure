@@ -1,0 +1,8 @@
+{
+  "kind": "pass",
+  "rule": "",
+  "absent": [
+    "T-XREF-SKILL"
+  ],
+  "why": "自由文本 skill_ref 合法（schema 1.1 并集语义）→ 必须 exit 0 且不得误报 T-XREF-SKILL"
+}
