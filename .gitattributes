@@ -1,0 +1,18 @@
+# 换行符契约：**一律 LF**
+#
+# 为什么必须写死：本项目用 sha256 校验「派生文件是否落后于权威数据」
+# （methods/index.md 记录了 methods/index.json 的哈希）。Git for Windows 默认
+# core.autocrlf=true，会把检出文件转成 CRLF，于是同一个提交在两台机器上算出
+# 两个哈希，validate.py 报 M-INDEX-HASH / M-INDEX-DRIFT——数据没坏，是换行符变了。
+#
+# 实测：没有这份文件时，Windows 上 `python nav.py test` 的第一套校验直接失败。
+* text=auto eol=lf
+
+# 二进制文件不做任何换行转换（text=auto 通常也能识别，这里显式声明避免歧义）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary

@@ -8,6 +8,52 @@
 
 ---
 
+## [0.1.1] — 2026-10-17
+
+### 修复：Windows 上跑不起来（补测时 5 套测试全挂）
+
+作者本机是 macOS，Windows 从未跑过。补测一次跑出 5 套全挂，根因分四类：
+
+| 症状 | 根因 | 修复 |
+|---|---|---|
+| 打印 `UnicodeEncodeError: 'gbk' codec can't encode '\u2705'` | stdout 被管道/文件接管时用系统区域编码 cp936，输出里的 ✅ ❌ ▶ 编不出来 | 新增 `scripts/console.py`：非控制台流统一 UTF-8；所有脚本入口调用 `console.setup()` |
+| 5 套测试「全部失败、输出为空」 | 父进程按 cp936 解码 UTF-8 子进程输出 → `UnicodeDecodeError` | 测试运行器显式 `encoding="utf-8"`（`run_all.py` / `run_rules.py` / `validate.py` / 单测） |
+| 场景测试 `FileNotFoundError: [WinError 2]` | `make_test_workspace.sh` 依赖 bash + rsync，Windows 都没有 | 新增 `scripts/make_test_workspace.py`（纯标准库）；`.sh` 保留为薄包装 |
+| `validate.py` 报 `M-INDEX-HASH` / `M-INDEX-DRIFT` | Git for Windows 默认 `core.autocrlf=true`，检出转成 CRLF，方法库 sha256 因此对不上 | 新增 `.gitattributes`（`* text=auto eol=lf`），固定 LF |
+
+### 修复：审计器与 SKILL.md 不同步
+
+`scripts/audit.py` 每次运行都报「文档 13 条 / 审计表 12 条」并 exit 1：
+审计表漏了文档第 11、12 条，还把「10-2」编成了 102。已按 SKILL.md 对齐
+（13 条：7 机械 / 3 半机械 / 3 纯自觉），并把「交付物过多时软删」如实标为纯自觉。
+
+### 新增测试（防止再退化）
+
+- `tests/unit/test_console_encoding.py`：用真管道捕获子进程，要求 ✅ 能输出成 UTF-8
+- `tests/unit/test_line_endings.py`：被跟踪的文本文件必须 LF（CRLF 会让哈希校验失效）
+- 测试总数：5 套 → 7 套
+
+### CI
+
+- matrix 增加 `windows-latest`：Ubuntu + Windows × Python 3.9 / 3.11 / 3.12
+- 增加一步显示 `git ls-files --eol`，换行符问题能直接定位
+- 此前 CI 只跑 Ubuntu，「Windows 没跑过」没有任何机制能发现——现在能了
+
+### 文档
+
+- README：Windows 三处环境差异、旧副本重新检出的方法；修正「交付包不含测试」等过期表述
+- USER_GUIDE：Windows 首次运行与换行符排障
+- DEVELOPMENT：测试命令与提交前清单（7 套、`console.setup()`、LF）
+
+### 实测范围（如实说明）
+
+- Windows 11 + Python 3.12：`python nav.py test` **7/7 通过**（含 157 条场景断言 + 50 条反例）
+- Chrome / Edge 无头出图：PNG + PDF 生成成功
+- `nav.py init / show / new / export / status / validate`、`exp search`、`audit` 均实跑通过
+- **Linux 未在本机实测**；CI 的 Ubuntu 任务是其第一道真实验证
+
+---
+
 ## [0.1.0] — 2026-10-17
 
 首次公开发布。
@@ -57,7 +103,7 @@
 
 ## 后续计划（不承诺时间）
 
-- **Windows 兼容**：Chrome 路径与交付目录改为可配置或自动探测；补 PowerShell 用法
+- **Linux 实测**：CI 跑 Ubuntu，但作者本机没有 Linux 环境；有真实反馈再补
 - **任务价值判定**：把「这个任务值不值得进入闭环」做成第一个判断，而不是默认全导入
   （目前 `deliver.py` 不看 `planning_depth`，所以 light 档也要交行动清单，过重）
 - **外部证据机制**：验收时若 AI 自己编证据、自己评估，需要引入外部来源或用户确认

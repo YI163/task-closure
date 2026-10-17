@@ -107,30 +107,42 @@ task_update.py ─→ deliver.py
 
 ## 测试
 
-公开包**不含测试套件**。开发仓库里有：
+测试套件就在 `tests/` 里（不另发「开发仓库」）。四条命令：
 
 ```
-tests/run_tests.py --all      场景测试（端到端，断言驱动）
+python nav.py test            一条跑完 7 套（数据校验 + 反例 + 场景 + 4 套单测）
+tests/run_tests.py --all      场景测试（端到端，断言驱动；在隔离副本里跑）
 tests/invalid/run_rules.py    反例测试（每条校验规则配一个必失败样本）
 scripts/validate.py --all     数据完整性校验
 ```
 
 **改代码后至少跑这三条。** 反例测试是重点——它保证校验规则不是摆设。
 
+**跨平台注意**（v0.1.1 起）：
+
+- 测试运行器用**管道**捕获子进程输出，Windows 的默认文本模式是 cp936，
+  所以子进程一律由 `scripts/console.py` 切到 UTF-8，父进程显式按 UTF-8 解码。
+  新加的脚本入口必须调用 `console.setup()`，否则「多套测试全部失败、输出为空」。
+- 隔离副本由 `scripts/make_test_workspace.py` 建立（纯标准库）。
+  旧版 `.sh` 依赖 bash + rsync，Windows 上根本跑不起来。
+- 仓库文本文件必须是 **LF**（`.gitattributes` 已固定）；`tests/unit/test_line_endings.py` 守着它。
+
 ---
 
 ## 提交前自检清单
 
 ```
-□ python3 nav.py test                      5 套全过
+□ python3 nav.py test                      7 套全过（Windows 用 python）
 □ 没有任何硬编码绝对路径（grep "/Users/"）
+□ 新脚本入口调用了 scripts/console.py 的 setup()（否则管道捕获会崩）
+□ 文本文件是 LF（.gitattributes 已固定，不要提交 CRLF）
 □ 新脚本不绕过 store.py
 □ 新的检查规则做了双向测试（造一个必失败样本证明它会失败）
 □ 若改了 schema.json，既有数据已迁移
 □ 若加了新脚本，加进 nav.py 的 COMMANDS 表
 ```
 
-**CI 会自动跑这件事**（`.github/workflows/tests.yml`，Python 3.9 / 3.11 / 3.12），
+**CI 会自动跑这件事**（`.github/workflows/tests.yml`，Ubuntu + Windows × Python 3.9 / 3.11 / 3.12），
 所以本地漏跑也会在 push 时暴露——但别依赖它，等 CI 红一遍再改更慢。
 
 ---

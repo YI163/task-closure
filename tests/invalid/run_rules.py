@@ -78,7 +78,15 @@ def samples_fingerprint() -> dict[str, str]:
 
 
 def run(cmd: list[str]) -> subprocess.CompletedProcess:
-    return subprocess.run(cmd, capture_output=True, text=True, cwd=str(PROJECT_ROOT))
+    # 显式 UTF-8：子进程输出 UTF-8（console.setup）；Windows 默认按 cp936 解码会崩。
+    return subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        cwd=str(PROJECT_ROOT),
+    )
 
 
 def evidence_lines(text: str, rule: str) -> list[str]:
@@ -399,6 +407,10 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    import console  # noqa: E402
+
+    console.setup()
     try:
         sys.exit(main(sys.argv))
     except store.StoreError as error:

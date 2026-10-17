@@ -54,8 +54,12 @@ def run_suite(name: str, cmd: list[str], timeout: int, verbose: bool) -> tuple[b
     """跑一套测试。返回 (是否通过, 摘要行, 耗时)。"""
     started = time.perf_counter()
     try:
+        # 必须显式按 UTF-8 解码：Windows 的文本模式默认用系统区域编码（中文为 cp936），
+        # 而子进程输出 UTF-8（各脚本入口调用 console.setup()）。两侧不一致会抛
+        # UnicodeDecodeError——实测表现为「5 套测试全部失败、输出为空」。
         proc = subprocess.run([PY] + cmd, cwd=ROOT, capture_output=True,
-                              text=True, timeout=timeout)
+                              text=True, encoding="utf-8", errors="replace",
+                              timeout=timeout)
         output = (proc.stdout or "") + (proc.stderr or "")
         code = proc.returncode
     except subprocess.TimeoutExpired:
@@ -120,6 +124,11 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import console  # noqa: E402
+
+    console.setup()
     try:
         sys.exit(main(sys.argv))
     except KeyboardInterrupt:

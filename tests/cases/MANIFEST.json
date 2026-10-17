@@ -4,7 +4,7 @@
   "runner": "tests/run_tests.py",
   "evidence_root": "reports/evidence/<测试号>/",
   "report": "reports/TEST_RUN_REPORT.md",
-  "isolation": "docs/TEST_ISOLATION.md（每次运行由 scripts/make_test_workspace.sh 建立新副本）",
+  "isolation": "docs/TEST_ISOLATION.md（每次运行由 scripts/make_test_workspace.py 建立新副本）",
   "modes": {
     "auto": "全部判定要点可自动断言",
     "auto+review": "自动断言 + 模型判断部分交独立审查员判定（运行器不宣布通过）",

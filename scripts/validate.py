@@ -1553,7 +1553,8 @@ def _run_renderer(renderer: Path, root: Path, report: Report) -> str | None:
         try:
             result = subprocess.run(
                 [sys.executable, str(Path("methods") / renderer.name)],
-                cwd=str(temp_root), capture_output=True, text=True, timeout=120,
+                cwd=str(temp_root), capture_output=True, text=True,
+                encoding="utf-8", errors="replace", timeout=120,
             )
         except subprocess.TimeoutExpired:
             report.check()
@@ -1854,7 +1855,10 @@ def main(argv: list[str]) -> int:
         script = Path(__file__).resolve().parent / "build_index.py"
         if idx.is_file() and script.is_file():
             report.check()
-            r = _sp.run([sys.executable, str(script), "--check"], capture_output=True, text=True)
+            r = _sp.run(
+                [sys.executable, str(script), "--check"],
+                capture_output=True, text=True, encoding="utf-8", errors="replace",
+            )
             if r.returncode != 0:
                 report.warn("E-INDEX-STALE", "state/experience_index.md",
                             "索引与经验/教训数据不一致——跑 python3 scripts/build_index.py 重建")
@@ -1933,6 +1937,10 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    import console  # noqa: E402
+
+    console.setup()
     try:
         sys.exit(main(sys.argv))
     except store.StoreError as error:

@@ -118,6 +118,11 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import console  # noqa: E402
+
+    console.setup()
     try:
         sys.exit(main(sys.argv))
     except KeyboardInterrupt:

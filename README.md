@@ -47,7 +47,30 @@ python3 nav.py show     # 任务总览（每次开工先跑这个）
 python3 nav.py test     # 跑全部测试
 ```
 
-**Windows（PowerShell）** 把 `python3` 换成 `python` 即可，其余相同。
+**Windows（PowerShell）**：把 `python3` 换成 `python`，其余相同。
+
+```powershell
+python nav.py init
+python nav.py test
+```
+
+Windows 的默认行为有三处与本项目冲突，仓库里都已处理（v0.1.1）：
+
+| 冲突 | 现在的处理 |
+|---|---|
+| 没有 `python3` 命令 | 文档给 `python` 写法；脚本不依赖命令名 |
+| 输出被管道/文件接管时用 cp936，打印 ✅ 会崩 | `scripts/console.py`：非控制台流统一 UTF-8 |
+| Git 默认把检出文件转成 CRLF，方法库哈希校验误报 | `.gitattributes` 固定 LF |
+
+> **旧副本要重新检出一次**（`.gitattributes` 不会回溯修改已检出的文件）：
+>
+> ```powershell
+> git rm --cached -r .
+> git reset --hard
+> ```
+>
+> 判断方法：`python scripts/validate.py --all` 若报 `M-INDEX-HASH` / `M-INDEX-DRIFT`
+> 而数据没动过，就是换行符问题。也可以直接重新 clone。
 
 ```bash
 # 3. 让 AI 按这份契约办事
@@ -108,8 +131,12 @@ ln -s "$(pwd)/skills/task-navigator" ~/.agents/skills/task-closure
 ```
 有代码强制（不满足直接拒绝）的规则      7 条  → 从未被违反
 半强制（会被追问，但要靠 AI 如实回答）   3 条  → 偶尔被违反
-纯自觉（没有任何检查点）               2 条  → 反复被违反
+纯自觉（没有任何检查点）               3 条  → 反复被违反
 ```
+
+> 这三行不是手数的：跑 `python3 scripts/audit.py`，它逐条检查「依据」是否真的存在于代码里。
+> 当前纯自觉的 3 条是第 3 条（不假装）、第 4 条（写计划前读规则）、第 12 条（交付物过多时软删）。
+> **审计表本身也会和文档脱节**——v0.1.1 修过一次：表里漏了第 11、12 条，数字对不上。
 
 **所以「可靠执行」靠的是检查点，不是加载。** 详见 `skills/task-navigator/SKILL.md`。
 
@@ -126,7 +153,8 @@ ln -s "$(pwd)/skills/task-navigator" ~/.agents/skills/task-closure
 | `state/schema.json` | 数据契约。**必须保留**——删了脚本会报错 |
 | `LICENSE` | MIT |
 
-**依赖**：Python ≥ 3.9（3.9.6 与 3.12 均实测全部测试通过）。**零第三方库。**
+**依赖**：Python ≥ 3.9（3.9.6 / 3.12 实测通过）。**零第三方库。**
+Windows 11 + Python 3.12 已实测（v0.1.1）：7 套测试全过，Chrome 出图可用。
 
 ---
 
@@ -135,22 +163,23 @@ ln -s "$(pwd)/skills/task-navigator" ~/.agents/skills/task-closure
 **测试是随包提供的**，一条命令跑完：
 
 ```bash
-python3 nav.py test           # 全部（约 7 秒）
-python3 nav.py test --quick   # 跳过场景测试（约 3 秒）
+python3 nav.py test           # 全部（Windows 实测约 22 秒）
+python3 nav.py test --quick   # 跳过场景测试（Windows 实测约 10 秒）
 ```
 
 | 套件 | 守什么 | 规模 |
 |---|---|---|
-| 数据完整性校验 | `state/` 是否符合 `schema.json` | 1800+ 项检查 |
+| 数据完整性校验 | `state/` 是否符合 `schema.json` | 500+ 项检查 |
 | **反例测试** | **每条校验规则都配一个「必失败」样本** | 50 个 |
 | 场景测试 | 端到端行为断言 | 157 条 |
-| 单元测试 | 单点逻辑（跨平台路径探测等） | 2 套 |
+| 单元测试 | 单点逻辑（跨平台路径、控制台编码、换行符、md2html） | 4 套 |
 
 **反例测试是这套东西的关键**：它保证校验规则不是摆设。
 本项目为此付过代价——有过「规则只注册了名字、检查代码没实现」的情况，
 因为当时没人跑反例，问题一直没暴露。
 
-**CI**：每次 push / PR 在 Python 3.9 / 3.11 / 3.12 上自动跑全部测试。
+**CI**：每次 push / PR 在 Ubuntu 与 Windows 上、Python 3.9 / 3.11 / 3.12 自动跑全部测试。
+Windows 那一格是 v0.1.1 补的——此前只有 Ubuntu，所以「Windows 没跑过」一直没人挡。
 
 ## 一条命令看它能干什么
 
@@ -178,14 +207,16 @@ python3 nav.py --help        # 全部命令
 
 1. **它不会自己变聪明。** 规则要生效，得靠 AI 每次真的去读、真的照做。上面那条「必须分清的两件事」就是在说这个。
 2. **`spec/` 是必要依赖。** 脚本会读它。**不要删**，也不要只复制 `scripts/`。
-3. **交付包不含测试。** 开发者的测试套件（157 条场景断言 + 50 条反例）不在公开包里。想跑测试请使用开发仓库。
-4. **作者本机环境**：macOS + DSH。其他环境未验证。
+3. **测试随仓库提供**（`tests/`：157 条场景断言 + 50 条反例 + 4 套单测），
+   `python nav.py test` 一条命令跑完；CI 也会跑。
+4. **实测环境**：macOS + DSH（开发环境）；Windows 11 + Python 3.12（v0.1.1 补测，
+   7 套测试全过）。**Linux 未完整实测**——CI 的 Ubuntu 任务就是它的第一道验证。
 
 ---
 
 ## 更新记录
 
-见 `CHANGELOG.md`。当前版本 `0.1.0`——**`0.x` 的意思是接口与数据契约仍可能变**，
+见 `CHANGELOG.md`。当前版本 `0.1.1`——**`0.x` 的意思是接口与数据契约仍可能变**，
 不是谦虚，是它还没在足够多的真实任务上验证过（见「已知限制」）。
 
 ## 许可

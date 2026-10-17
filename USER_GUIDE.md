@@ -42,6 +42,20 @@ python3 nav.py test     # 数据校验 + 反例 + 场景 + 单测，期望「全
 - 其余 → 把输出发出来
 
 **Windows（PowerShell）**：把 `python3` 换成 `python`，其余相同。
+
+```powershell
+python nav.py init
+python nav.py test
+```
+
+若 `test` 在 Windows 上报 `M-INDEX-HASH` / `M-INDEX-DRIFT` 而你又没改过数据，
+那是**换行符**问题（Git 默认把检出转成 CRLF），不是数据坏了：
+
+```powershell
+git rm --cached -r .
+git reset --hard
+```
+
 路径类命令的两种写法：
 
 | 用途 | macOS / Linux | Windows PowerShell |

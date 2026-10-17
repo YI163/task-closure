@@ -7,7 +7,10 @@ name: tests
 # 作者自己也容易只跑一条就以为全过（实测踩过：改了校验规则只跑 validate，
 # 反例全红却不知道）。
 #
-# 现在：每次 push / PR 自动跑全部三套测试，跨 Python 版本。
+# 现在：每次 push / PR 自动跑全部测试，跨操作系统 + 跨 Python 版本。
+#
+# v0.1.1 补 Windows：此前 matrix 只有 ubuntu-latest，于是「Windows 上从没跑过」
+# 这件事没有任何机制能发现——实测一跑，5 套测试全挂（编码 + bash/rsync + CRLF）。
 
 on:
   push:
@@ -21,11 +24,14 @@ permissions:
 
 jobs:
   test:
-    name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os }} · Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false          # 一个版本挂了，其他版本继续跑，看清全貌
+      fail-fast: false          # 一个格子挂了，其他继续跑，看清全貌
       matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest      # Windows 的默认文本模式是 cp936、Git 是 CRLF，必须真跑
         # 3.9 = README 声称的最低版本；3.12 = 开发环境版本
         python-version: ["3.9", "3.11", "3.12"]
 
@@ -49,6 +55,11 @@ jobs:
       - name: 初始化数据目录
         run: python scripts/init.py
 
+      # 换行符是哈希校验的前提（methods/index.md 记录 index.json 的 sha256）。
+      # 仓库已用 .gitattributes 固定 LF；这里额外打一行 eol，失败时好定位。
+      - name: 显示换行符属性
+        run: git ls-files --eol methods/index.json state/schema.json
+
       - name: 跑全部测试
         run: python tests/run_all.py --verbose
 
@@ -57,7 +68,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v5
         with:
-          name: test-report-py${{ matrix.python-version }}
+          name: test-report-${{ matrix.os }}-py${{ matrix.python-version }}
           path: |
             reports/TEST_RUN_REPORT.md
           if-no-files-found: ignore

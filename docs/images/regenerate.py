@@ -149,7 +149,8 @@ def render_html_to_png(doc: str, out: pathlib.Path, width: int, height: int) -> 
         [str(chrome), "--headless", "--disable-gpu", "--hide-scrollbars",
          "--force-device-scale-factor=2", "--default-background-color=FF1A1D21",
          f"--screenshot={out}", f"--window-size={width},{height}", str(tmp)],
-        capture_output=True, text=True, timeout=120, check=False)
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        timeout=120, check=False)
 
 
 def make_flowchart() -> None:
@@ -158,7 +159,8 @@ def make_flowchart() -> None:
     r = subprocess.run([PY, str(REPO / "scripts" / "flowchart.py"),
                         "--spec", str(spec), "--out", str(HERE),
                         "--name", "how-it-works", "--height", "1500"],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
     if not (HERE / "how-it-works.png").is_file():
         raise SystemExit(f"流程图渲染失败：{r.stdout}{r.stderr}")
     for extra in ("how-it-works.html", "how-it-works.pdf"):
@@ -205,7 +207,8 @@ def make_task_card() -> None:
     tid = data["tasks"][-1]["task_id"]
 
     out = subprocess.run([PY, "scripts/task_show.py", "--task", tid],
-                         cwd=sandbox, capture_output=True, text=True).stdout
+                         cwd=sandbox, capture_output=True, text=True,
+                         encoding="utf-8", errors="replace").stdout
     lines = out.splitlines()
 
     def grab(start: str, end: str) -> list[str]:
@@ -260,4 +263,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    import console  # noqa: E402
+
+    console.setup()
     sys.exit(main())

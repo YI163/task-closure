@@ -11,7 +11,9 @@
 
 设计约束（来自 t4 契约与 docs/TEST_ISOLATION.md）
 ------------------------------------------------
-1. **隔离**：每次运行先调用 `bash scripts/make_test_workspace.sh <新名字>` 建立全新副本；
+1. **隔离**：每次运行先调用 `python scripts/make_test_workspace.py <新名字>` 建立全新副本；
+   （旧版是 `bash scripts/make_test_workspace.sh`，Windows 上因缺 bash/rsync 直接失败，
+   现已改用纯 Python 实现，见该脚本头部说明）
    所有场景命令都在副本内执行（被测脚本的 PROJECT_ROOT 由脚本自身路径决定，
    因此调用副本里的脚本 + cwd=副本 时不可能写到正式项目）。
 2. **不写正式项目状态**：运行前后对正式项目 state/ 做 sha256 快照并比对，
@@ -1401,7 +1403,7 @@ TESTS = [
 
 def create_workspace(name: str) -> tuple[Path, str]:
     completed = subprocess.run(
-        ["bash", "scripts/make_test_workspace.sh", name],
+        [PY, "scripts/make_test_workspace.py", name],
         cwd=str(ROOT),
         capture_output=True,
         text=True,
@@ -1416,7 +1418,8 @@ def create_workspace(name: str) -> tuple[Path, str]:
 
 def git_commit() -> str:
     completed = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=str(ROOT), capture_output=True, text=True
+        ["git", "rev-parse", "HEAD"], cwd=str(ROOT), capture_output=True,
+        text=True, encoding="utf-8", errors="replace",
     )
     return completed.stdout.strip() if completed.returncode == 0 else "（无法获取）"
 
@@ -1502,7 +1505,7 @@ def write_report(run: Run, before: dict, after: dict, isolation_ok: bool, isolat
     lines.append("## 复现方法\n")
     lines.append("```bash")
     lines.append(f"cd {ROOT}")
-    lines.append(f"bash scripts/make_test_workspace.sh <新名字>            # 本报告用的是 {run.workspace.name}")
+    lines.append(f"python scripts/make_test_workspace.py <新名字>            # 本报告用的是 {run.workspace.name}")
     lines.append(f"{PY} tests/run_tests.py --all     # 会自动建新副本并重跑全部场景")
     lines.append("```")
     lines.append("")
@@ -1569,7 +1572,7 @@ def main(argv: list[str]) -> int:
     EVIDENCE_ROOT.mkdir(parents=True, exist_ok=True)
     (EVIDENCE_ROOT / "T4_RUN_META.txt").write_text(
         f"运行编号   : {name}\n建立时间   : {created_at}\n来源提交   : {commit}\n"
-        f"副本路径   : {workspace}\n建立命令   : bash scripts/make_test_workspace.sh {name}\n"
+        f"副本路径   : {workspace}\n建立命令   : python scripts/make_test_workspace.py {name}\n"
         f"--- 建立输出 ---\n{create_output}--- 副本来源文件 ---\n{origin_text}",
         encoding="utf-8",
     )
@@ -1615,4 +1618,9 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import console  # noqa: E402
+
+    console.setup()
     sys.exit(main(sys.argv))

@@ -32,7 +32,7 @@ def read(name: str) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
-def check_rule(rule_no: int, title: str, probes: list[tuple[str, str, str]]) -> tuple[str, list[str]]:
+def check_rule(rule_no: str, title: str, probes: list[tuple[str, str, str]]) -> tuple[str, list[str]]:
     """probes: [(文件, 特征串, 说明)]，任一命中即认为该档成立。"""
     for filename, needle, desc in probes:
         if needle and needle in read(filename):
@@ -40,32 +40,39 @@ def check_rule(rule_no: int, title: str, probes: list[tuple[str, str, str]]) -> 
     return "", []
 
 
-RULES: list[tuple[int, str, str, list[tuple[str, str, str]]]] = [
-    (1, "先读状态再开口", "机械",
+RULES: list[tuple[str, str, str, list[tuple[str, str, str]]]] = [
+    ("1", "先读状态再开口", "机械",
      [("task_show.py", "PRECONDITIONS", "task_show 每次输出都打印九条硬前置与该任务 constraints——执行者必然看到")]),
-    (2, "状态变更必须走脚本", "半机械",
+    ("2", "状态变更必须走脚本", "半机械",
      [("store.py", "单一入口", "store.py 声明所有读写必须经过它；但无机制阻止直接编辑 JSON")]),
-    (3, "不假装（没执行不说已执行）", "纯自觉",
+    ("3", "不假装（没执行不说已执行）", "纯自觉",
      [("", "", "")]),
-    (4, "写计划前先读规则", "半机械",
+    ("4", "写计划前先读规则", "半机械",
      [("task_show.py", "硬前置自检", "规则随 task_show 输出送到眼前；但「是否真的读了」无法检查")]),
-    (5, "主路径不可被后续问答推翻", "半机械",
+    ("5", "主路径不可被后续问答推翻", "半机械",
      [("deliver.py", "primary_path_respected", "交付检查会逐条提问并要求留痕")]),
-    (6, "出交付物前对照 constraints", "半机械",
+    ("6", "出交付物前对照 constraints", "半机械",
      [("deliver.py", "constraints_checked", "交付检查会逐条提问并要求留痕")]),
-    (7, "交付位置/格式/命名", "机械",
+    ("7", "交付位置/格式/命名", "机械",
      [("deliver.py", "naming_ok", "命名规则被代码检查（任务 ID 前缀 / >25 字符直接报错）"),
       ("deliver.py", "DESKTOP", "桌面可达性被代码检查")]),
-    (8, "承诺必配方案", "机械",
+    ("8", "承诺必配方案", "机械",
      [("deliver.py", "scan_commitments", "承诺句被代码扫描")]),
-    (9, "交付前必须跑交付检查", "机械",
+    ("9", "交付前必须跑交付检查", "机械",
      [("task_update.py", "_has_deliverables", "有交付物但无 delivery_check 时，close 直接 die(2)")]),
-    (10, "交付必须包含行动清单", "机械",
+    ("10", "交付必须包含行动清单", "机械",
      [("deliver.py", "缺少「行动清单」文件", "交付目录无行动清单时直接报错、不得交付")]),
-    (102, "流程图必须渲染（禁止手写ASCII）", "机械",
+    # 编号跟随 SKILL.md：文档里这条写作「10-2」，不是 102。
+    # 此前审计表用 102/103 自编号，与文档对不上，还漏了文档第 11、12 条，
+    # 于是 audit.py 每次运行都报「文档 13 条 / 审计表 12 条」——现已对齐。
+    ("10-2", "流程图必须渲染（禁止手写ASCII）", "机械",
      [("deliver.py", "缺少流程图（渲染版）", "只认渲染出的 HTML/PNG/PDF；主动报出手写 ASCII 框图")]),
-    (103, "绝不擅自合并用户文件", "机械",
+    ("11", "绝不擅自合并用户文件", "机械",
      [("deliver.py", "GENERATED-MERGE-BUNDLE", "合并本带标记，检测只认标记（判据试过三版）")]),
+    # 第 12 条目前没有任何脚本检查：如实标成「纯自觉」，不要给它编一个机械依据。
+    # 审计的价值在于区分「真有护栏」与「只是写了」，不是凑满绿色。
+    ("12", "交付物过多时软删（移出视线）", "纯自觉",
+     [("", "", "")]),
     # 第 9 条「交付前跑检查」是一个动作，其组成部分不再单列——
     # 此前拆成三条（103/104/105）导致审计表比文档多 2 条。
     # **减法的方向也包括「审计表本身不要比规则更细」。
@@ -114,4 +121,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    import console  # noqa: E402
+
+    console.setup()
     sys.exit(main())

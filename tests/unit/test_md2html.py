@@ -29,7 +29,8 @@ def main() -> int:
         dst = pathlib.Path(td) / "out.html"
         src.write_text(SAMPLE, encoding="utf-8")
         r = subprocess.run([sys.executable, str(ROOT / "scripts" / "md2html.py"), str(src), str(dst)],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True,
+                           encoding="utf-8", errors="replace")
         assert r.returncode == 0, f"转换失败：{r.stderr}"
         h = dst.read_text(encoding="utf-8")
 
@@ -48,4 +49,9 @@ def main() -> int:
         return 0 if not failed else 1
 
 if __name__ == "__main__":
+    # 管道/重定向下强制 UTF-8：否则 Windows 中文环境打印 ✅ 会 UnicodeEncodeError
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import console  # noqa: E402
+
+    console.setup()
     sys.exit(main())
