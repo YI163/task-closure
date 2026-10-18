@@ -31,9 +31,10 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 PY = sys.executable
+PRIVATE_MARKER = ROOT / "PRIVATE-WORKSPACE.md"
 
 IGNORE = shutil.ignore_patterns(
-    ".git", "outputs", "reports", "__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache"
+    ".git", "outputs", "reports", "__pycache__", "*.pyc", ".pytest_cache", ".mypy_cache", "backups"
 )
 
 
@@ -65,16 +66,23 @@ def sha256(path: pathlib.Path) -> str:
 
 
 def prepare_copy(base: pathlib.Path) -> pathlib.Path:
-    """复制仓库到「含中文 + 空格」的目录，并清掉用户数据（只留契约与示例档案）。"""
+    """复制仓库到「含中文 + 空格」的目录。
+
+    公开仓库：清掉用户数据，只留契约与脱敏示例档案（模拟干净克隆）。
+    私有工作仓库（有 PRIVATE-WORKSPACE.md）：**保留完整 state**——真实 user_skills 里的
+    evidence.task_id 指向 tasks.json 的任务，删掉 tasks 会造成 8 条 S-XREF-TASK 悬空引用
+    （实测于 macOS 迁移：validate 假失败，而数据本身 0 错误）。
+    """
     dest = base / "含 空格 的目录" / "task-closure 副本"
     shutil.copytree(ROOT, dest, ignore=IGNORE)
 
-    state = dest / "state"
-    keep = {"schema.json", "user_skills.json"}
-    for child in state.iterdir():
-        if child.name in keep:
-            continue
-        shutil.rmtree(child) if child.is_dir() else child.unlink()
+    if not PRIVATE_MARKER.is_file():
+        state = dest / "state"
+        keep = {"schema.json", "user_skills.json"}
+        for child in state.iterdir():
+            if child.name in keep:
+                continue
+            shutil.rmtree(child) if child.is_dir() else child.unlink()
     # 必须返回**解析后**的路径：GitHub Windows runner 的 TEMP 常是 8.3 短路径
     # （C:\Users\RUNNER~1\...），而 nav.py 打印的是 GetFinalPathNameByHandle 的长路径。
     # 不解析就会出现「输出里明明有路径、断言却匹配不上」的假失败（CI 已实测）。
@@ -85,9 +93,20 @@ def main() -> int:
     failures: list[str] = []
     original_state = ROOT / "state" / "tasks.json"
     original_hash = sha256(original_state)
+    is_private = PRIVATE_MARKER.is_file()
 
     with tempfile.TemporaryDirectory() as td:
         dest = prepare_copy(pathlib.Path(td))
+
+        # 私有工作仓库会保留已导入的数据；预期任务数 = 原有 + 新建的 1 条
+        initial_tasks = 0
+        if is_private:
+            try:
+                initial_tasks = len(
+                    json.loads((dest / "state" / "tasks.json").read_text(encoding="utf-8"))["tasks"]
+                )
+            except Exception:  # noqa: BLE001 - 没有 tasks.json 时按 0 处理
+                initial_tasks = 0
 
         # 1) env：认到副本自己的根目录
         proc = run(["nav.py", "env"], dest)
@@ -124,7 +143,9 @@ def main() -> int:
         except Exception as exc:  # noqa: BLE001 - 测试里只关心是否可用
             tasks = []
             check(False, "副本 state/tasks.json 可读", failures, f"{type(exc).__name__}: {exc}")
-        check(len(tasks) == 1, "任务写入副本的 state/（不是原仓库）", failures, f"{len(tasks)} 条")
+        check(len(tasks) == initial_tasks + 1,
+              "任务写入副本的 state/（不是原仓库）", failures,
+              f"{len(tasks)} 条（原有 {initial_tasks} + 新建 1）")
         check(sha256(original_state) == original_hash,
               "原仓库 state/tasks.json 未被改动", failures)
 
