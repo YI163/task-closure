@@ -43,6 +43,24 @@ BINARY_SUFFIXES = {
 # 这些目录里是生成物/本地状态，不属于「提交内容」（且已被 .gitignore 排除）
 SKIP_PARTS = {".git", "outputs", "__pycache__", "node_modules", "reports"}
 
+PRIVATE_MARKER = ROOT / "PRIVATE-WORKSPACE.md"
+
+# 私有工作仓库（方案 A）里这些是个人数据：Windows 上由脚本生成时可能以 CRLF 落地。
+# 它们不参与任何按字节的哈希校验（唯一按字节哈希的是 methods/index.json），
+# 提交时 .gitattributes 也会规范化为 LF，所以不纳入本检查；
+# 代码、文档、方法库仍然强制 LF。
+PRIVATE_DATA_PREFIXES = (
+    "state/tasks.json",
+    "state/tasks.jsonl",
+    "state/experience/",
+    "state/lessons/",
+    "state/flowcharts/",
+    "state/coverage_checks/",
+    "state/self_reviews/",
+    "state/experience_index.md",
+    "decisions.md",
+)
+
 
 def tracked_files() -> list[pathlib.Path] | None:
     """用 git 列出被跟踪的文件；没有 git 时返回 None（跳过而不是误报）。"""
@@ -71,12 +89,18 @@ def main() -> int:
 
     offenders: list[pathlib.Path] = []
     checked = 0
+    skipped_private_data = 0
+    is_private = PRIVATE_MARKER.is_file()
     for path in files:
         if any(part in SKIP_PARTS for part in path.parts):
             continue
         if path.suffix.lower() in BINARY_SUFFIXES:
             continue
         if not path.is_file():
+            continue
+        relative = path.relative_to(ROOT).as_posix()
+        if is_private and relative.startswith(PRIVATE_DATA_PREFIXES):
+            skipped_private_data += 1
             continue
         checked += 1
         if b"\r\n" in path.read_bytes():
@@ -95,6 +119,9 @@ def main() -> int:
 
     print("LF 检查：")
     print(f"  ✅ {checked} 个被跟踪的文本文件全部为 LF")
+    if skipped_private_data:
+        print(f"  （私有工作仓库：跳过 {skipped_private_data} 个个人数据文件——不参与哈希校验，"
+              "提交时仍会规范化为 LF）")
     print()
     print("结论：通过")
     return 0

@@ -254,6 +254,15 @@ Windows 11 + Python 3.12 已实测（v0.1.3）：15 套测试全过，Chrome 出
 - 两台电脑都 clone 这个私有仓库，用它当工作目录：开工前 `git pull`，收工后
   `git add -A && git commit && git push`；
 - 更新代码：把公开仓库加为 upstream，`git fetch upstream && git merge upstream/main`；
+- 私有副本要额外做两件事（否则数据同步不上、测试会误报）：
+  1. 在 `.gitignore` 末尾**追加否定规则**，把要同步的数据路径放回来
+     （`!state/tasks.json`、`!state/experience/` 等；保留 `state/backups/`、`outputs/`、
+     `reports/`、`STATUS.md` 的忽略）；
+  2. 放一个 `PRIVATE-WORKSPACE.md` 标记文件——`tests/unit/test_privacy_gitignore.py`
+     看到它就切换为「数据应可跟踪、生成物仍忽略」的检查；
+- 私有副本里 `state/` 数据在 Windows 上可能以 CRLF 落地（脚本生成）；`test_line_endings`
+  会自动跳过这些数据文件（它们不参与按字节的哈希校验，提交时仍会规范化为 LF）。
+  代码、文档、`methods/` 仍强制 LF；
 - 优点：数据与代码在同一个仓库里，校验、检索、经验引用永远一致，**没有链接可踩坏**；
 - 代价：代码更新和个人数据混在一条历史里，上游改 `.gitignore` / `CHANGELOG` 时可能要解冲突。
   经验是独立文件，合并友好；`tasks.json` 是单文件，尽量避开两台机器同时改。
@@ -353,7 +362,7 @@ python3 nav.py --help        # 全部命令
 
 ## 更新记录
 
-见 `CHANGELOG.md`。当前版本 `0.1.3`——**`0.x` 的意思是接口与数据契约仍可能变**，
+见 `CHANGELOG.md`。当前版本 `0.1.4`——**`0.x` 的意思是接口与数据契约仍可能变**，
 不是谦虚，是它还没在足够多的真实任务上验证过（见「已知限制」）。
 
 ## 许可
