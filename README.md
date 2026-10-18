@@ -238,53 +238,58 @@ Windows 11 + Python 3.12 已实测（v0.1.3）：15 套测试全过，Chrome 出
 ## 两台电脑共用经验库
 
 经验是**一条一个文件**的本地 JSON（`state/experience/*.json`），天然适合用 git 同步。
-推荐两种做法，按「代码与数据是否分开」选。
+但有一个硬约束必须先知道：
 
-### 方案 A（推荐）：私有数据仓库 + 目录链接
+> **只同步 `state/experience/` + `state/lessons/` 不够。**
+> 经验条目里有 `source_task_id`（必须指向 `tasks.json` 中存在的任务）与
+> `related_skill_ids`（必须指向 `user_skills.json` 中的技能），`validate.py` 会做交叉核对。
+> 只同步经验、不同步任务与技能档案，另一台机器会报 `E-SOURCE` / `T-XREF-*`。
+> 所以真正能分享的是一个**自洽的 `state/`**：任务 + 经验 + 教训 + 技能档案一起。
 
-- 代码仓库保持现状，可随时从上游更新；
-- 新建 **private** 仓库 `task-closure-data`，只放数据：`state/experience/`、`state/lessons/`，
-  可选 `state/user_skills.json` / `decisions.md`；
-- 两台电脑各 clone 一次，用目录链接把代码仓库的对应目录指过去：
+### 方案 A（推荐）：私有工作仓库（代码 + 数据）
+
+- 以公开版本为基线建一个 **private** 仓库（例如 `task-closure-private`），
+  把现有 `state/` 数据（`tasks.json`、`tasks.jsonl`、`experience/`、`lessons/`、
+  `user_skills.json`、`experience_index.md` 等）导入并提交；
+- 两台电脑都 clone 这个私有仓库，用它当工作目录：开工前 `git pull`，收工后
+  `git add -A && git commit && git push`；
+- 更新代码：把公开仓库加为 upstream，`git fetch upstream && git merge upstream/main`；
+- 优点：数据与代码在同一个仓库里，校验、检索、经验引用永远一致，**没有链接可踩坏**；
+- 代价：代码更新和个人数据混在一条历史里，上游改 `.gitignore` / `CHANGELOG` 时可能要解冲突。
+  经验是独立文件，合并友好；`tasks.json` 是单文件，尽量避开两台机器同时改。
+
+### 方案 B：私有数据仓库 + 把整个 `state/` 链接过去
+
+- 新建 **private** 仓库（例如 `task-closure-data`），里面放**整个 `state/` 目录**
+  （含 `schema.json`），不放代码；
+- 两台电脑各 clone 公开代码仓库 + 数据仓库，然后把代码仓库的 `state` 指过去：
 
 ```powershell
-# Windows（Junction，本地 NTFS 通常不需要管理员权限；两台机器各做一次）
-New-Item -ItemType Junction -Path "<代码仓库>\state\experience" -Target "<数据仓库>\state\experience"
-New-Item -ItemType Junction -Path "<代码仓库>\state\lessons"    -Target "<数据仓库>\state\lessons"
+# Windows：先把原 state 目录移走，再建 Junction（本地 NTFS 通常不需要管理员权限）
+Move-Item "<代码仓库>\state" "<代码仓库>\state.bak"
+New-Item -ItemType Junction -Path "<代码仓库>\state" -Target "<数据仓库>\state"
 ```
 
 ```bash
 # macOS / Linux
-ln -s "<数据仓库>/state/experience" "<代码仓库>/state/experience"
-ln -s "<数据仓库>/state/lessons"    "<代码仓库>/state/lessons"
+mv "<代码仓库>/state" "<代码仓库>/state.bak" && ln -s "<数据仓库>/state" "<代码仓库>/state"
 ```
 
-- 开工前：`git -C <数据仓库> pull --rebase`；收工后：`add / commit / push`；
-- 验证落点：`python nav.py env` 会打印「经验目录 / 教训目录」，链接安装时显示
-  `（链接 → <私有数据仓库>/state/experience）`——**这一行就是你确认经验写到哪的依据**。
+- 代码更新与数据更新互不干扰；但 `state/schema.json` 随代码升级，代码升级后要同步一次；
+- 风险：链接失效（数据仓库被移动/删除）时，脚本可能在代码仓库里重建一个 `state/`，
+  变成两套数据。用 `python nav.py env` 确认数据目录，并定期检查链接。
 
-为什么这样能少冲突：两台电脑同时各写一条经验 → git 看到的是**两个新文件**，不会冲突。
-`state/tasks.json` 是单文件，容易冲突，所以**不要**把它放进同步范围。
+### 不建议：只同步经验/教训
 
-### 方案 B（更省事）：私有 fork 整个仓库
-
-把本仓库 fork 成 **private**，两台电脑都 clone 私有 fork；在私有 fork 里把
-`state/experience/` 的忽略去掉并提交数据。代码更新从公开上游合并：
-
-```bash
-git remote add upstream https://github.com/YI163/task-closure.git
-git fetch upstream && git merge upstream/main
-```
-
-优点是只有一个仓库；缺点是每次上游改 `.gitignore` / `CHANGELOG` 都可能要解冲突，
-而且代码更新与个人数据混在同一条历史里。
+会破坏交叉引用（见上面的硬约束），另一台机器 `validate.py` 直接报错。
 
 ### 不管选哪个
 
 - 仓库必须是 **Private**（`git remote -v` 确认推的是私有地址）；公开仓库只放代码；
 - **不要**用 OneDrive / iCloud 同步 `.git` 目录，也不要把数据仓库嵌套在代码仓库里；
 - 同一时间尽量只在一台电脑写经验，写完 push 再换机；
-- 冲突处理：经验是独立 JSON，保留两边文件即可（重名时改文件名并同步改 `experience_id`）。
+- 冲突处理：经验是独立 JSON，保留两边文件即可（重名时改文件名并同步改 `experience_id`）；
+- 验证：`python nav.py env` 看数据/经验目录，`python nav.py validate` 确认交叉引用完整。
 
 ---
 
