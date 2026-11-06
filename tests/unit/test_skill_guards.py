@@ -173,31 +173,101 @@ def probe_merge_marker(repo: pathlib.Path, task_id: str, desktop: pathlib.Path):
 
 
 def probe_judgment(repo: pathlib.Path, task_id: str, desktop: pathlib.Path):
-    clear_deliverables(repo, task_id)
+    """判断检查必须双向生效：未回答 / 回答不通过都阻断，回答放行答案才放行。
+
+    回归 issue #2：原实现只算 `not problems and not unanswered`，
+    某一项明确回答 no 时只显示 ❌，仍可能得到「可以交付」。
+    另外，no_unauthorized_merge 问的是「有没有合并」，放行答案是 no，
+    不能简单地把所有 no 都当成通过或不通过。
+    """
+    d = clear_deliverables(repo, task_id)
+    (d / "0-从这里开始（行动清单）.md").write_text(
+        "□ 第一步：做什么\n□ 第二步：做完回来说一声\n", encoding="utf-8"
+    )
+
+    # 用独立桌面目录：前面的探针可能留下「同一内容多格式」，会掩盖判断检查的结果。
+    desktop = desktop.parent / "desktop-judgment"
+    if desktop.exists():
+        shutil.rmtree(desktop)
+    desktop.mkdir(parents=True)
+
+    # 清掉机械检查的其余阻断项，才能断言「全部回答通过 → 可以交付」。
+    review = run(
+        ["scripts/self_review.py", "--task", task_id, "--record", "--all-clear"], repo
+    )
+    if review.returncode != 0:
+        return False, "自审记录失败：" + blob(review)[-200:]
+
     first = deliver_check(repo, task_id, desktop)
-    need_unanswered = "条判断检查未回答" in blob(first) and "[constraints_checked]" in blob(first)
+    need_unanswered = (
+        first.returncode != 0
+        and "条判断检查未回答" in blob(first)
+        and "[constraints_checked]" in blob(first)
+    )
 
     sys.path.insert(0, str(repo / "scripts"))
     try:
         import deliver as deliver_module  # noqa: PLC0415
 
-        keys = [key for key, _ in deliver_module.JUDGMENT_CHECKS]
+        passing = {
+            key: {"answer": expected, "note": "样本回答"}
+            for key, _question, expected in deliver_module.JUDGMENT_CHECKS
+        }
     finally:
         sys.path.pop(0)
-    answers = {key: {"answer": "yes", "note": "样本回答"} for key in keys}
+
     answers_path = repo / "tests" / "tmp" / "seal_answers.json"
     answers_path.parent.mkdir(parents=True, exist_ok=True)
-    answers_path.write_text(json.dumps(answers, ensure_ascii=False), encoding="utf-8")
-    sealed = run(["scripts/deliver.py", "seal", "--task", task_id, "--file", str(answers_path)], repo)
 
+    def seal(answers: dict) -> None:
+        answers_path.write_text(json.dumps(answers, ensure_ascii=False), encoding="utf-8")
+        proc = run(
+            ["scripts/deliver.py", "seal", "--task", task_id, "--file", str(answers_path)], repo
+        )
+        if proc.returncode != 0:
+            raise RuntimeError("seal 失败：" + blob(proc)[-200:])
+
+    # 1) 全部回答放行答案 → 可以交付
+    seal(passing)
     second = deliver_check(repo, task_id, desktop)
+    second_text = blob(second)
     need_sealed = (
-        sealed.returncode == 0
-        and f"已记录 {len(keys)} 条判断检查" in blob(sealed)
-        and "判断检查全部已回答" in blob(second)
+        second.returncode == 0
+        and "判断检查全部已回答且通过" in second_text
+        and "可以交付" in second_text
     )
-    ok = need_unanswered and need_sealed
-    return ok, "未回答时阻断、回答落盘后放行" if ok else blob(second)[-300:]
+
+    # 2) 明确回答 no → 必须拒绝交付（issue #2 的核心缺口）
+    rejected_answers = {key: dict(value) for key, value in passing.items()}
+    rejected_answers["constraints_checked"] = {"answer": "no", "note": "样本回答：明确未通过"}
+    seal(rejected_answers)
+    rejected_proc = deliver_check(repo, task_id, desktop)
+    rejected_text = blob(rejected_proc)
+    need_rejected = (
+        rejected_proc.returncode != 0
+        and "判断检查有 1 条未通过" in rejected_text
+        and "❌ [constraints_checked]" in rejected_text
+        and "可以交付" not in rejected_text
+    )
+
+    # 3) 反向题（合并检查）按自己的放行答案判断：yes 才是坏状态，必须阻断
+    reverse_answers = {key: dict(value) for key, value in passing.items()}
+    reverse_answers["no_unauthorized_merge"] = {"answer": "yes", "note": "样本回答：发生了合并"}
+    seal(reverse_answers)
+    reverse_proc = deliver_check(repo, task_id, desktop)
+    reverse_text = blob(reverse_proc)
+    need_reverse = (
+        reverse_proc.returncode != 0
+        and "❌ [no_unauthorized_merge]" in reverse_text
+        and "可以交付" not in reverse_text
+    )
+
+    ok = need_unanswered and need_sealed and need_rejected and need_reverse
+    detail = (
+        "未回答阻断、全部放行答案可交付、回答 no 阻断、合并题回答 yes 阻断"
+        if ok else (first.stdout + rejected_proc.stdout + reverse_proc.stdout)[-300:]
+    )
+    return ok, detail
 
 
 def _desktop_conflict_lines(text: str) -> int:
