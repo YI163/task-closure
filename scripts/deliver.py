@@ -43,26 +43,34 @@ COMMITMENT_PATTERNS = [
     r"应当[^。；\n]{0,20}(安排|联系|索取|核实)",
 ]
 
-# 判断类检查：不能自动化，必须逐条回答
+# 判断类检查：不能自动化，必须逐条回答。
+#
+# 每项是 (key, question, expected)：expected 是**放行所需的答案**。
+# 多数问题问「做到了吗」，答 yes 才通过；no_unauthorized_merge 问
+# 「有没有合并」，答 no 才是安全状态——不能把所有检查都当成「no 即失败」，
+# 否则「没有合并」反而会被误判成不通过。
 JUDGMENT_CHECKS = [
-    ("constraints_checked", "逐条对照过任务的 constraints 字段？交付物是不是建在这些约束上？"),
-    ("primary_path_respected", "交付物是否仍然服务于任务声明的 primary_path（没有被后续问答换掉）？"),
-    ("promises_have_plans", "交付物里每一句「建议/可以/另：是否」，是否都配了可执行方案？没有配的，是否已删除？"),
-    ("nature_correct", "任务性质判断过吗？（这是分析 / 调研 / 执行 / 协调 / 学习？要产出结论还是行动？）"),
-    ("uncertainty_marked", "事实 / 推断 / 未知 三者是否区分清楚？有没有把推断写成事实？"),
+    ("constraints_checked", "逐条对照过任务的 constraints 字段？交付物是不是建在这些约束上？", "yes"),
+    ("primary_path_respected", "交付物是否仍然服务于任务声明的 primary_path（没有被后续问答换掉）？", "yes"),
+    ("promises_have_plans", "交付物里每一句「建议/可以/另：是否」，是否都配了可执行方案？没有配的，是否已删除？", "yes"),
+    ("nature_correct", "任务性质判断过吗？（这是分析 / 调研 / 执行 / 协调 / 学习？要产出结论还是行动？）", "yes"),
+    ("uncertainty_marked", "事实 / 推断 / 未知 三者是否区分清楚？有没有把推断写成事实？", "yes"),
     ("html_default_respected",
      "本次交付用的是不是 .html（第 ⑦ 条的默认格式）？"
      "如果用了别的格式，是用户**这一次明确要求**的，还是我自己改的？"
-     "（实测犯过：一次被要求 PDF，之后擅自全改成 PDF）"),
+     "（实测犯过：一次被要求 PDF，之后擅自全改成 PDF）",
+     "yes"),
     ("no_unauthorized_merge",
      "本次交付有没有把「多份独立文档」合并成一个文件？"
      "（用户只要「同一内容少几种格式」，不要「多份文档并成一册」——"
-     "实测已犯两次，见 SKILL.md §0 第 11 条）"),
+     "实测已犯两次，见 SKILL.md §0 第 11 条；**没有合并**才通过）",
+     "no"),
     ("spec_coverage_known",
      "你知道当前规格覆盖率是多少吗？（跑 python3 scripts/spec_coverage.py）"
      "——说「做完了」之前必须先给出这个数字；"
-     "「缺口清单走完」不等于「规格全做到」"),
-    ("executor_declared", "每一步的执行者是否已声明（user/ai/joint）？AI 代做是否写明理由？"),
+     "「缺口清单走完」不等于「规格全做到」",
+     "yes"),
+    ("executor_declared", "每一步的执行者是否已声明（user/ai/joint）？AI 代做是否写明理由？", "yes"),
 ]
 
 
@@ -362,14 +370,20 @@ def check(task_id: str) -> int:
     print("【B. 判断检查（不能自动化，必须你逐条回答并留痕）】")
     sealed = task.get("delivery_check") or {}
     unanswered = []
-    for key, question in JUDGMENT_CHECKS:
+    rejected = []
+    for key, question, expected in JUDGMENT_CHECKS:
         answer = sealed.get(key)
         if answer is None:
             unanswered.append((key, question))
             print(f"  ⬜ [{key}] {question}")
+        elif answer.get("answer") == expected:
+            print(f"  ✅ [{key}] {answer.get('note', '')[:70]}")
         else:
-            mark = "✅" if answer.get("answer") == "yes" else "❌"
-            print(f"  {mark} [{key}] {answer.get('note', '')[:70]}")
+            rejected.append((key, expected, answer.get("answer")))
+            print(
+                f"  ❌ [{key}] 回答 {answer.get('answer')}（放行需要 {expected}）"
+                f"：{answer.get('note', '')[:70]}"
+            )
 
     # ── 汇总 ─────────────────────────────────────────────────
     print()
@@ -384,10 +398,17 @@ def check(task_id: str) -> int:
         print(f"  ⚠️ {n}")
     if unanswered:
         print(f"  ⬜ 还有 {len(unanswered)} 条判断检查未回答——未回答不得交付")
-    else:
-        print("  ✅ 判断检查全部已回答")
+    if rejected:
+        print(
+            f"  ❌ 判断检查有 {len(rejected)} 条未通过"
+            "——回答未达到放行条件的项目必须清零，否则不得交付："
+        )
+        for key, expected, actual in rejected:
+            print(f"     · [{key}] 回答 {actual}，放行需要 {expected}")
+    if not unanswered and not rejected:
+        print("  ✅ 判断检查全部已回答且通过")
 
-    ok = not problems and not unanswered
+    ok = not problems and not unanswered and not rejected
     print()
     print("结论：" + ("可以交付" if ok else "不得交付，先解决上面标出的项"))
     return 0 if ok else 1
@@ -401,7 +422,7 @@ def seal(task_id: str, answers_path: Path) -> int:
     task = store.find_task(data["tasks"], task_id)
 
     record = {}
-    for key, question in JUDGMENT_CHECKS:
+    for key, question, _expected in JUDGMENT_CHECKS:
         entry = answers.get(key)
         if not isinstance(entry, dict) or entry.get("answer") not in ("yes", "no"):
             die(f"答案缺少 {key}，或 answer 不是 yes/no（每条都必须明确回答）")
